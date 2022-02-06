@@ -39,3 +39,23 @@ The three common situations we cannot use for-each:
 * If we are traversing multiple collections at the same time
 
 Lastly, consider implement **Iterable** if you are writing your own class
+
+### Item 59: Know and use the libraries
+
+Take a look at problem with [Random](src/Item59.java)
+
+* By using a standard library, you take advantage of the knowledge of the experts who wrote it and the experience of those who used it before you.
+* Every programmer should be familiar with the basics of java.lang, java.util, and java.io, and their subpackages.
+* If you can't find what you need in Java platform libraries, look into high-quality third-party libraries, such as Google's Guava library.
+
+### Item 60: Avoid float and double if exact answers are required
+
+* The float and double types are particularly ill-suited for monetary calculations because it is impossible to represent 0.1 as a float or double exactly
+
+[Example](src/Item60.java)
+
+* The right way to solve this is use BigDecimal, int or long for monetary calculations
+* Use BigDecimal if you want the system to keep track of the decimal point and you don't mind the invonvenience and cost of now using a primitive type
+* If the quantities don't exceed 9 decimal digits, you can use int
+* If the quantities don't exceed 18 decimal digits, you can use long
+* Otherwise, bigDecimal
