@@ -59,3 +59,46 @@ Take a look at problem with [Random](src/Item59.java)
 * If the quantities don't exceed 9 decimal digits, you can use int
 * If the quantities don't exceed 18 decimal digits, you can use long
 * Otherwise, bigDecimal
+
+### Item 61: Prefer primitive types to boxed primitives
+1. primitives have only their values, whereas boxed primitives have identities distinct from their values
+2. primitive types have only fully functional values, whereas boxed primitive type can be null
+3. primitives are more time and space efficient  
+
+* Applying the == operator to boxed primitives is almost always wrong  
+```java
+Comparator<Integer> naturalOrder = 
+  (i,j) -> (i < j) ? -1: (i == j ? 0 : 1);
+```
+The problem is i == j on Integer perform identity comparision instead  
+We could do this instead:
+```java
+Comparator<Integer> naturalOrder = (iBoxed, jBoxed) -> {
+    int i = iBoxed, j = jBoxed; // Auto-unboxing
+    return (i,j) -> (i < j) ? -1: (i == j ? 0 : 1);
+};
+```
+* When you mix primitives and boxed primitives in an operation, the boxed primitive is auto-unboxed
+```java
+public class Unbelievable{
+    static Integer i;
+    public static void main(String[] args){
+        if (i == 42){
+            System.out.println("Unbelievable");
+        }
+    }
+}
+```
+This throw NullPointerException because auto-unboxing  
+* The below has serious performance issue because the program construct about 2^31 unnecessary Long instances
+```java
+public static void main(String[] args){
+  Long sum = 0L;
+  for (long i = 0; i < Integer.MAX_VALUE; i++){
+    sum += i;
+  }
+}
+```
+* There are legitimate uses for boxed primitives:
+    * in collections
+    * in generic type
