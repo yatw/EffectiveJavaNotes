@@ -102,3 +102,42 @@ public static void main(String[] args){
 * There are legitimate uses for boxed primitives:
     * in collections
     * in generic type
+
+### Item 62: Avoid strings where other types are more appropriate
+* Strings are poor substitutes for other value types
+* When a piece of data comes into a program it is often in string form, only leave it that way if this data is textual in nature
+* Strings are poor substitutes for enum types
+#### Strings are poor substitutes for aggregate types
+Example
+```java
+// Inappropriate use of string as aggregate type
+String compoundKey = className + "#" + i.next();
+```
+* Bad if the character used to separate fields occurs in one of the fields
+* Need to parse the string to access individual fields
+* can't provide equals, toString, or compareTo
+
+#### Strings are poor substitues for capabilies
+* Capability means an unforgeable key
+* This chapter used a ThreadLocal example, and pass in String Key to access variable when it could have been a Key Object
+
+### Item 63: Beware the performance of string concatenation
+* Using the string concatenation operator repeatedly to concatenate n strings requires time quadratic in n
+```java
+public String statement(){
+	String result = "";
+	for (int i = 0; i < numItems(); i++){
+		result += lineForItem(i); // String concatenation
+		return result;
+	}
+}
+```
+Use StringBuilder **with preallocated size** instead
+```java
+public String statement(){
+	StringBuilder b = new StringBuilder(numItems() * LINE_WIDTH);
+	for (int i = 0; i < numItems(); i++)
+		b.append(lineForItem(i));
+		return b.toString();
+}
+```
