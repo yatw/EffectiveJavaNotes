@@ -141,3 +141,14 @@ public String statement(){
 		return b.toString();
 }
 ```
+
+### Item 64: Refer to objects by their interfaces
+* If appropriate interface types exist, then parameters, return values, variables, and fields should all be declared using interface types
+* Reason is flexibility- if we decide to switch implementations, all we need to do is change the class name in the constructor.
+* If the original implementation offered some special functionality not required by the interface contract and the code depend on that functionality, then the new implementation should provide the same functionality
+* It is entirely appropriate to refer to an object by a class rather than an interface if no appropriate interface exists
+	* value classes such as String and BigInteger are often final and rarely have corresponding interfaces
+	* objects belonging to a framework whose fundamental types are classes rather than interfaces
+	* classes that provide extra methods not found in the interface (should be rare)
+	* others...
+* For the above exceptions try to use the least specific class in the class hierarchy that provides the required functionality
