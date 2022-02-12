@@ -152,3 +152,45 @@ public String statement(){
 	* classes that provide extra methods not found in the interface (should be rare)
 	* others...
 * For the above exceptions try to use the least specific class in the class hierarchy that provides the required functionality
+
+
+### Item 65: Prefer interfaces to reflection
+* Reflection allows one class to use another, even if the latter class did not exist when the former was compiled.
+* This power comes at a price:
+	* You lose all the benefits of compile-time type checking
+	* The code required to perform reflective access is clumsy and verbose
+	* Performance suffers
+* You can obtain many of the benefits of reflection while incurring few of its costs by using it only in a very limited form.
+* {There is an example in the book}
+* By create instances reflectively and access them normally via their interface of superclass
+* A legitimate use of reflection is to manage a class's dependencies on other classes, methods, or fields that may be absent at runtime.
+
+
+### Item 66: Use native methods judiciously
+* Java Native Interface (JNI) allows Java programs to call native methods in C or C++
+* JNI have had three main uses
+	* provide access to platform-specific facilities such as registers
+	* provide access to existing libraries of native code
+	* write performance-critical parts of applications in native languages for performance
+* It is seldom necessary to access platform-specific facilities via JNI as the Java platform matured
+* It is rarely advisable to use native methods for improved performance (as Java continue to update)
+* JNI has serious disadvantages
+	* not safe, vulnerable to memory corruption errors
+	* platform-dependent making it less portable
+	* harder to debug
+	* can decrease performance because the garbage collector can't automate, or even track, native memory usage
+	* there is a cost associated with going into and out of native code
+	* require "glue code" that is difficult to read and tedious to write
+	
+	
+### Item 67: Optimize judiciously
+* it is easy to do more harm than good
+* don't sacrifice sound architectural principles for performance
+	* Good programs localize design decisions within individual components, so individual decisions can be changed without affecting other parts
+* Strive to avoid design decisions that limit performance
+	* The APIs, wire-level protocols, and persistent data formats, are difficult to change
+	* They can place significant limitations on the performance that a system can ever achieve
+* Measure performance before and after each attempted optimization
+	* it is difficult to guess where the program is spending its time
+* Use profiling tools to get runtime information and detect slow runtime algorithm
+
