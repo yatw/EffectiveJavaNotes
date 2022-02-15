@@ -194,3 +194,9 @@ public String statement(){
 	* it is difficult to guess where the program is spending its time
 * Use profiling tools to get runtime information and detect slow runtime algorithm
 
+
+### Item 68: Adhere to generally accepted naming conventions
+* The name of any package that will be used outside your organization should begin with your organization's Internet domain name with the components reversed
+	* users must not create packages or modules whose names begin with java or javax
+	* abbreviations are encouraged
+![](resource/68.jpg)
