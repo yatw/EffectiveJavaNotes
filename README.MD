@@ -200,3 +200,13 @@ public String statement(){
 	* users must not create packages or modules whose names begin with java or javax
 	* abbreviations are encouraged
 ![](resource/68.jpg)
+
+## 10 Exceptions
+
+### Item 69: Use exceptions only for exceptional conditions
+* Exceptions should never be used for ordinary control flow
+    * exceptions are rarely fast
+    * try-catch block might inhibits certain optimization that JVm might otherwise perform
+* If you are writing a library, do not force your clients to use exceptions for ordinary control flow
+    * Provide state-testing method like `hasNext()` for your iterator
+    * Or return an empty optional or null
