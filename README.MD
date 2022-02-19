@@ -1,8 +1,32 @@
 # Effective Java - 3rd Edition Notes
 
+
+## Table of Contents
+
+* [9 General Programming](#9-general-programming)    
+    * [Item 57: Minimize the scope of local variables](#item-57-minimize-the-scope-of-local-variables)   
+    * [Item 58: Prefer for-each loops to traditional for loops](#item-58-prefer-for-each-loops-to-traditional-for-loops)   
+    * [Item 59: Know and use the libraries](#item-59-know-and-use-the-libraries)   
+    * [Item 60: Avoid float and double if exact answers are required](#item-60-avoid-float-and-double-if-exact-answers-are-required)   
+    * [Item 61: Prefer primitive types to boxed primitives](#item-61-prefer-primitive-types-to-boxed-primitives)   
+    * [Item 62: Avoid strings where other types are more appropriate](#item-62-avoid-strings-where-other-types-are-more-appropriate)   
+    * [Item 63: Beware the performance of string concatenation](#item-63-Beware-the-performance-of-string-concatenation)   
+    * [Item 64: Refer to objects by their interfaces](#item-64-refer-to-objects-by-their-interfaces)   
+    * [Item 65: Prefer interfaces to reflection](#item-65-prefer-interfaces-to-reflection)   
+    * [Item 66: Use native methods judiciously](#item-66-use-native-methods-judiciously)   
+    * [Item 67: Optimize judiciously](#item-67-optimize-judiciously)   
+    * [Item 68: Adhere to generally accepted naming conventions](#item-68-adhere-to-generally-accepted-naming-conventions)   
+* [10 Exceptions](#10-exceptions)    
+    * [Item 69: Use exceptions only for exceptional conditions](#item-69-use-exceptions-only-for-exceptional-conditions)
+    * [Item 70: Use checked exceptions for recoverable conditions and runtime exceptions for programming errors](#item-70-use-checked-exceptions-for-recoverable-conditions-and-runtime-exceptions-for-programming-errors)
+    * [Item 71: Avoid unnecessary use of checked exceptions](#item-71-avoid-unnecessary-use-of-checked-exceptions)
+
+  
+  
+    
 ## 9 General Programming
 
-### Item 57: Minimize the scope of local variables
+### Item 57 Minimize the scope of local variables
 * The most powerful technique for minimizing the scope of a local variable is to declare it where it is first used.
 * Nearly every local variable declaration should contain an initializer
 	* that just mean you should assign the value as you declare the variable
@@ -10,7 +34,7 @@
 * Prefer forloop to while loop as forloop allow you to declare loop variables
 	* avoid accidentally reusing an old index variable from a previous while loop
 
-### Item 58: Prefer for-each loops to traditional for loops
+### Item 58 Prefer for-each loops to traditional for loops
 * for-each loop gets rid of the clutter and the opportunity for error hiding iterator or index variable(s)
 * This is especially helpful when doing nested iteration
 
@@ -40,7 +64,7 @@ The three common situations we cannot use for-each:
 
 Lastly, consider implement **Iterable** if you are writing your own class
 
-### Item 59: Know and use the libraries
+### Item 59 Know and use the libraries
 
 Take a look at problem with [Random](src/Item59.java)
 
@@ -48,7 +72,7 @@ Take a look at problem with [Random](src/Item59.java)
 * Every programmer should be familiar with the basics of java.lang, java.util, and java.io, and their subpackages.
 * If you can't find what you need in Java platform libraries, look into high-quality third-party libraries, such as Google's Guava library.
 
-### Item 60: Avoid float and double if exact answers are required
+### Item 60 Avoid float and double if exact answers are required
 
 * The float and double types are particularly ill-suited for monetary calculations because it is impossible to represent 0.1 as a float or double exactly
 
@@ -60,7 +84,7 @@ Take a look at problem with [Random](src/Item59.java)
 * If the quantities don't exceed 18 decimal digits, you can use long
 * Otherwise, bigDecimal
 
-### Item 61: Prefer primitive types to boxed primitives
+### Item 61 Prefer primitive types to boxed primitives
 1. primitives have only their values, whereas boxed primitives have identities distinct from their values
 2. primitive types have only fully functional values, whereas boxed primitive type can be null
 3. primitives are more time and space efficient  
@@ -103,7 +127,7 @@ public static void main(String[] args){
     * in collections
     * in generic type
 
-### Item 62: Avoid strings where other types are more appropriate
+### Item 62 Avoid strings where other types are more appropriate
 * Strings are poor substitutes for other value types
 * When a piece of data comes into a program it is often in string form, only leave it that way if this data is textual in nature
 * Strings are poor substitutes for enum types
@@ -121,7 +145,7 @@ String compoundKey = className + "#" + i.next();
 * Capability means an unforgeable key
 * This chapter used a ThreadLocal example, and pass in String Key to access variable when it could have been a Key Object
 
-### Item 63: Beware the performance of string concatenation
+### Item 63 Beware the performance of string concatenation
 * Using the string concatenation operator repeatedly to concatenate n strings requires time quadratic in n
 ```java
 public String statement(){
@@ -142,7 +166,7 @@ public String statement(){
 }
 ```
 
-### Item 64: Refer to objects by their interfaces
+### Item 64 Refer to objects by their interfaces
 * If appropriate interface types exist, then parameters, return values, variables, and fields should all be declared using interface types
 * Reason is flexibility- if we decide to switch implementations, all we need to do is change the class name in the constructor.
 * If the original implementation offered some special functionality not required by the interface contract and the code depend on that functionality, then the new implementation should provide the same functionality
@@ -154,7 +178,7 @@ public String statement(){
 * For the above exceptions try to use the least specific class in the class hierarchy that provides the required functionality
 
 
-### Item 65: Prefer interfaces to reflection
+### Item 65 Prefer interfaces to reflection
 * Reflection allows one class to use another, even if the latter class did not exist when the former was compiled.
 * This power comes at a price:
 	* You lose all the benefits of compile-time type checking
@@ -166,7 +190,7 @@ public String statement(){
 * A legitimate use of reflection is to manage a class's dependencies on other classes, methods, or fields that may be absent at runtime.
 
 
-### Item 66: Use native methods judiciously
+### Item 66 Use native methods judiciously
 * Java Native Interface (JNI) allows Java programs to call native methods in C or C++
 * JNI have had three main uses
 	* provide access to platform-specific facilities such as registers
@@ -183,7 +207,7 @@ public String statement(){
 	* require "glue code" that is difficult to read and tedious to write
 	
 	
-### Item 67: Optimize judiciously
+### Item 67 Optimize judiciously
 * it is easy to do more harm than good
 * don't sacrifice sound architectural principles for performance
 	* Good programs localize design decisions within individual components, so individual decisions can be changed without affecting other parts
@@ -195,7 +219,7 @@ public String statement(){
 * Use profiling tools to get runtime information and detect slow runtime algorithm
 
 
-### Item 68: Adhere to generally accepted naming conventions
+### Item 68 Adhere to generally accepted naming conventions
 * The name of any package that will be used outside your organization should begin with your organization's Internet domain name with the components reversed
 	* users must not create packages or modules whose names begin with java or javax
 	* abbreviations are encouraged
@@ -203,10 +227,48 @@ public String statement(){
 
 ## 10 Exceptions
 
-### Item 69: Use exceptions only for exceptional conditions
+### Item 69 Use exceptions only for exceptional conditions
 * Exceptions should never be used for ordinary control flow
     * exceptions are rarely fast
     * try-catch block might inhibits certain optimization that JVm might otherwise perform
 * If you are writing a library, do not force your clients to use exceptions for ordinary control flow
     * Provide state-testing method like `hasNext()` for your iterator
     * Or return an empty optional or null
+    
+### Item 70 Use checked exceptions for recoverable conditions and runtime exceptions for programming errors
+* There are three kinds of throwables:
+#### Checked Exceptions
+* Used when the caller can reasonably be expected to recover
+* Force the caller to **try-catch** or **declare the method throw exception**
+```java
+public static void writeToFile() throws IOException {
+ 
+}
+```
+* All you need to do to throw a checked exception is ensure that it doesn't extend `RuntimeException`
+* If you throw this one, provide useful information in the error to help caller recover
+#### RuntimeException
+* Indicate programming errors when recovery is impossible and there is no point keep executing the program
+* When unsure if the caller can recover, throw unchecked`RuntimeException`
+#### Error
+* There is a strong convention that errors are reserved for JVM
+* Do not define Error subclasses; do not throw them either
+
+### Item 71 Avoid unnecessary use of checked exceptions
+Checked exception force programmers to deal with problems, enhancing reliability.
+But if the programmer are going to handle the exception like this:
+```java
+}catch (The CheckedException e){
+	throw new AssertionError(); // Can't happen
+}
+```
+Then there is no point to throw a checked exception if there is nothing they can do about it. This just clutter the program.
+
+There is 2 thing you can try:
+1. Return an optional of the desired result type
+	* Downside is you lose the stacktrace 
+2. Provide another method for caller to check if an exception will happen
+	* hasNext() method from iterator
+	* Allow caller to just call the dangerous method with no try-catch if they want
+	* If this extra method will duplicate the work, then it is not a good idea
+
