@@ -20,9 +20,9 @@
     * [Item 69: Use exceptions only for exceptional conditions](#item-69-use-exceptions-only-for-exceptional-conditions)
     * [Item 70: Use checked exceptions for recoverable conditions and runtime exceptions for programming errors](#item-70-use-checked-exceptions-for-recoverable-conditions-and-runtime-exceptions-for-programming-errors)
     * [Item 71: Avoid unnecessary use of checked exceptions](#item-71-avoid-unnecessary-use-of-checked-exceptions)
+    * [Item 72: Favor the use of standard exceptions](#item-72-favor-the-use-of-standard-exceptions)
+    * [Item 73: Throw exceptions appropriate to the abstraction](#item-73-throw-exceptions-appropriate-to-the-abstraction)
 
-  
-  
     
 ## 9 General Programming
 
@@ -272,3 +272,24 @@ There is 2 thing you can try:
 	* Allow caller to just call the dangerous method with no try-catch if they want
 	* If this extra method will duplicate the work, then it is not a good idea
 
+### Item 72 Favor the use of standard exceptions 
+* Do not reuse Exception, RuntimeException, Throwable, or Error directly
+Use the common exceptions:
+![](resource/72.jpg)
+
+### Item 73 Throw exceptions appropriate to the abstraction
+* Exception throw from lower-level abstraction are often not useful to higher-level abstraction
+* Higher layers should catch lower-level exceptions and throw exceptions that can be explained in terms of the higher-level abstraction
+
+#### Exceptions translation
+You can also optionally pass the exception from lower exception to HigherLevelException to help debug
+```java
+try{
+    ... // Use lower-level abstraction method
+} catch (LowerLevelException e){
+    throw new HigherLevelException(e);
+}
+```
+* while exception translation is superior to mindless propagation of exceptions from lower layers, it should not be overused
+    * Best to ensure lower-level methods always succeed
+    * Have higher layer silently work around these exceptions, logging if needed
