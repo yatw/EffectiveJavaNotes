@@ -24,7 +24,11 @@
     * [Item 73: Throw exceptions appropriate to the abstraction](#item-73-throw-exceptions-appropriate-to-the-abstraction)
     * [Item 74: Document all exceptions thrown by each method](#item-74-document-all-exceptions-thrown-by-each-method)
     * [Item 75: Include failure-capture information in detail messages](#item-75-include-failure-capture-information-in-detail-messages)
+    * [Item 76: Strive for failure atomicity](#item-76-strive-for-failure-atomicity)
+    * [Item 77: Don't ignore exceptions](#item-77-dont-ignore-exceptions)
 
+
+Strive for failure atomicity
     
 ## 9 General Programming
 
@@ -327,3 +331,26 @@ public IndexOutOfBoundException(int lowerBound, int upperBound, int index){
 }
 ```
 * Content is more important than readability (not for normal user, for programmer debug)
+
+
+### Item 76 Strive for failure atomicity
+* Failure-atomic means a failed operation should not modified the state of other objects. Everything should stay at the same as if the operation didn't happen
+* Several ways to achieve this property:
+1. Use immutable object 
+2. Check parameters before performing operation
+3. Order any part that may fail before any part that modifies the object
+4. Create a copy and perform operation on that copy
+5. Write recovery code that roll back its state (rare)
+* Failure-atomic is not always desirable due to the possibility to increase the complexity (also rare)
+
+### Item 77 Don't ignore exceptions
+* It is easy to ignore exceptions by surrounding a method invocation with a try statement and empty catch block
+* If you choose to ignore exception, the catch block should contain a comment explaining why it is appropriate to do so, and rename the variable to "ignored"
+```java
+int someNumber = 0;
+try{
+  someNumber = someOperation();
+catch (TimeoutException | ExecutionException ignored){
+  // Use default: default is desiable, not required
+}
+```
