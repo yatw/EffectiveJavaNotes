@@ -22,6 +22,8 @@
     * [Item 71: Avoid unnecessary use of checked exceptions](#item-71-avoid-unnecessary-use-of-checked-exceptions)
     * [Item 72: Favor the use of standard exceptions](#item-72-favor-the-use-of-standard-exceptions)
     * [Item 73: Throw exceptions appropriate to the abstraction](#item-73-throw-exceptions-appropriate-to-the-abstraction)
+    * [Item 74: Document all exceptions thrown by each method](#item-74-document-all-exceptions-thrown-by-each-method)
+    * [Item 75: Include failure-capture information in detail messages](#item-75-include-failure-capture-information-in-detail-messages)
 
     
 ## 9 General Programming
@@ -293,3 +295,35 @@ try{
 * while exception translation is superior to mindless propagation of exceptions from lower layers, it should not be overused
     * Best to ensure lower-level methods always succeed
     * Have higher layer silently work around these exceptions, logging if needed
+    
+
+### Item 74 Document all exceptions thrown by each method
+* Never take the shortcut of declaring a method to throw some superclass of multiple exception
+	* It will obscures any other exception that may be thrown
+```java
+public void method() throw Exception{ // Do not do this
+  ...
+}
+```
+```java
+public void method() throw IOException, FileNotFoundException{ // Do this
+  ...
+}
+```
+* You should document the unchecked exceptions that a method can throw although it is not always possible in reality (with @throws tag)
+* Do not use the throw keyword on unchecked exceptions
+* Exception documented with @throws tag but not throw keyword give a strong visual cue to others that exception is unchecked
+* If the same exception is thrown by many methods in a class for the same reason, you can document the exception in the class's documentation comment
+
+### Item 75 Include failure-capture information in detail messages
+* Stack Trace contains the exception's string representation, the result of invoking its toString method
+* Leave out sensitive data like passwords, encryption keys, etc
+* To capture a failure, the detail message of an exception should contain the values of all parameters and fields that contributed to the exception
+* You can ensure the exception contain the necessary parameter in the message by forcing it to be in the constructor:
+```java
+public IndexOutOfBoundException(int lowerBound, int upperBound, int index){
+   super(String.format("Lower bound: %d, Upper bound: %d, Index: %d, lowerBound, upperBound, index));
+...
+}
+```
+* Content is more important than readability (not for normal user, for programmer debug)
