@@ -26,7 +26,9 @@
     * [Item 75: Include failure-capture information in detail messages](#item-75-include-failure-capture-information-in-detail-messages)
     * [Item 76: Strive for failure atomicity](#item-76-strive-for-failure-atomicity)
     * [Item 77: Don't ignore exceptions](#item-77-dont-ignore-exceptions)
-
+* [11 Concurrency](#11-concurrency)   
+    * [Item 78: Synchronize access to shared mutable data](#item-78-synchronize-access-to-shared-mutable-data)
+    * [Item 79: Avoid excessive synchronization](#item-79-avoid-excessive-synchronization)
 
 Strive for failure atomicity
     
@@ -344,13 +346,36 @@ public IndexOutOfBoundException(int lowerBound, int upperBound, int index){
 * Failure-atomic is not always desirable due to the possibility to increase the complexity (also rare)
 
 ### Item 77 Don't ignore exceptions
-* It is easy to ignore exceptions by surrounding a method invocation with a try statement and empty catch block
-* If you choose to ignore exception, the catch block should contain a comment explaining why it is appropriate to do so, and rename the variable to "ignored"
-```java
-int someNumber = 0;
-try{
-  someNumber = someOperation();
-catch (TimeoutException | ExecutionException ignored){
-  // Use default: default is desiable, not required
-}
-```
+   * It is easy to ignore exceptions by surrounding a method invocation with a try statement and empty catch block
+   * If you choose to ignore exception, the catch block should contain a comment explaining why it is appropriate to do so, and rename the variable to "ignored"
+   ```java
+   int someNumber = 0;
+   try{
+     someNumber = someOperation();
+   catch (TimeoutException | ExecutionException ignored){
+     // Use default: default is desiable, not required
+   }
+   ```
+
+
+## 11 Concurrency  
+  
+### Item 78 Synchronize access to shared mutable data 
+* There are 2 important features for multi-thread application to work:
+	* Mutual Exclusion – only one thread executes a critical section at a time
+	* Communication– changes made by one thread to the shared data are visible to other threads to maintain data consistency
+* The synchronized keyword prevent threads from observing an object in an inconsistent state, and **ensures that each thread entering a synchronized method or block sees the effects of all previous modifications** (Communication feature)
+* If a variable is needed by multiple threads and no synchronization is applied, the VM might optimize and transform the code (Example in page 313, not what you want)
+* Synchronization is not guaranteed to work unless both read and write operations are synchronized
+* There is no `synchronized` variable. But we have `volatile` variable, which will [instruct JVM threads to read the value of `volatile` variable from main memory and don’t cache it locally](https://stackoverflow.com/a/34364511/5777189)
+* **volatile** only provides Communication feature. When using volatile without Synchronization and ++ operator. Still have the problem that when 2 threads read the values of a variable at the same time, the later thread might write back a value without the change from first thread
+* There is a atomicLong class that provides both featuer out of the box
+* Try to avoid synchronization problem as much as possible by sharing immutable data or don't share at all- confine mutable data to a single thread
+
+      
+### Item 79 Avoid excessive synchronization
+* Be careful when invoking alien method from your synchronized block, if that alien method start a new thread etc could cause exceptions, performance hit, deadlocks, or data corruption
+	* alien method is method that you don't know its implementation like a interface, or abstract class
+* As a rule, do as little work as possible inside synchronized regions
+* If you are writing a mutable class, prefer omit all synchronization and allow the client to synchronize externally than synchronize internally to make the class thread-safe
+	* If there is a method modifies a static field and there is any possibility that the method will be called from multiple threads, you must synchronize access to the field internally. Because unrelated clients can invoke the method without synchronization.
