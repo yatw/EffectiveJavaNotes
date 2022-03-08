@@ -29,6 +29,7 @@
 * [11 Concurrency](#11-concurrency)   
     * [Item 78: Synchronize access to shared mutable data](#item-78-synchronize-access-to-shared-mutable-data)
     * [Item 79: Avoid excessive synchronization](#item-79-avoid-excessive-synchronization)
+    * [Item 80: Prefer executors, tasks, and streams to threads](#item-80-prefer-executors-tasks-and-streams-to-threads)
 
 Strive for failure atomicity
     
@@ -379,3 +380,12 @@ public IndexOutOfBoundException(int lowerBound, int upperBound, int index){
 * As a rule, do as little work as possible inside synchronized regions
 * If you are writing a mutable class, prefer omit all synchronization and allow the client to synchronize externally than synchronize internally to make the class thread-safe
 	* If there is a method modifies a static field and there is any possibility that the method will be called from multiple threads, you must synchronize access to the field internally. Because unrelated clients can invoke the method without synchronization.
+	
+	
+### Item 80 Prefer executors, tasks, and streams to threads
+* Normally you should refrain from working directly with threads, there is `ExecutorService`
+* Using `ExecutorService` allows you to specify tasks (Runnerable and Callable) and let the appropriate execution policy to execute them
+* `Executors.newCachedThreadPool`: submitted tasks are not queue but immediately handed off to a thread for execution; if no threads are available, more threads will be created
+* `Executors.newFixedThreadPool`: Good for heavily loaded production server
+* Or use `ThreadPoolExecutor` class directly for complete control
+* For more read <em>Java Concurrency in Practice [Goetz]</em>
