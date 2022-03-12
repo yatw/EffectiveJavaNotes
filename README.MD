@@ -389,3 +389,32 @@ public IndexOutOfBoundException(int lowerBound, int upperBound, int index){
 * `Executors.newFixedThreadPool`: Good for heavily loaded production server
 * Or use `ThreadPoolExecutor` class directly for complete control
 * For more read <em>Java Concurrency in Practice [Goetz]</em>
+
+### Item 81 Prefer concurrency utilities to wait and notify
+   * Given the difficulty of using wait and notify correctly, use the higher-level concurrency utilities instead
+   * `SynchronizedMap` will lock the whole map object for read and write, while `ConcurrentHashMap` lock on segments on write only for better performance
+   * `Countdown latches` allow one or more threads to wait for one or more other threads to do something\
+   * The wait method is used to make a thread wait for some condition.
+       * Must be invoked inside a synchronized region that locks the object on which it is invoked
+   * Alwayas use the wait loop idiom to invoke the `wait` method; never invoke it outside of a loop
+   ```java
+   synchronized (obj){
+       while (<condition does not hold>){
+           obj.wait(); // (Releases lock, and reacquires on wakeup)
+       }   
+   }
+   ```
+
+### Item 82 Document thread safety
+* There are different levels of thread safety:
+    * Immutable: Objects like String, Long, and BigInteger are constant and no external synchronization is necessary
+    * Unconditionally thread-safe: Classes like AtomicLong and ConcurrentHashMap are mutable but the class has sufficient internal synchronization that its instances can be used concurrently without external synchronization
+    * Conditionally thread-safe: Like unconditionally thread-safe but some methods require external synchronization.
+    * Not thread-safe: Instances of this class are mutable and client must surround each method invocation with synchronization. Example such as ArrayList and HashMap.
+    * Thread-hostile: This class is unsafe for concurrent use even with external synchronization. A class or method found thread-hostile are typically fixed or deprecated.
+* You cannot look for the `synchronized` modifier in doc to tell if a method is thread-safe
+    * `synchronized`  an implementation detail, not a part of its API 
+* A class may offer an object as a lock
+    * use a private lock object to prevent clients to interfere with object's synchronization
+    * private lock also works well for classes designed for inheritance, prevent subclass to interfere with the lock object
+    * lock objects should always be final
