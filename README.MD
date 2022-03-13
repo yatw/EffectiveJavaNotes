@@ -30,8 +30,9 @@
     * [Item 78: Synchronize access to shared mutable data](#item-78-synchronize-access-to-shared-mutable-data)
     * [Item 79: Avoid excessive synchronization](#item-79-avoid-excessive-synchronization)
     * [Item 80: Prefer executors, tasks, and streams to threads](#item-80-prefer-executors-tasks-and-streams-to-threads)
-
-Strive for failure atomicity
+    * [Item 81: Prefer concurrency utilities to wait and notify](#item-81-prefer-concurrency-utilities-to-wait-and-notify)
+    * [Item 82: Document thread safety](#item-82-document-thread-safety)
+    * [Item 83: Use lazy initialization judiciously](#item-83-use-lazy-initialization-judiciously)
     
 ## 9 General Programming
 
@@ -418,3 +419,70 @@ public IndexOutOfBoundException(int lowerBound, int upperBound, int index){
     * use a private lock object to prevent clients to interfere with object's synchronization
     * private lock also works well for classes designed for inheritance, prevent subclass to interfere with the lock object
     * lock objects should always be final
+    
+### Item 83 Use lazy initialization judiciously
+* lazy initialization a field variable in multiple threads require synchronization
+* lazy initialization increase the cost of accessing the field therefore normal initialization is prefer
+
+#### Normal init
+```java
+private final FieldType field = computeFieldValue();
+```
+
+#### Lazy init
+```java
+private FieldType field;
+
+private synchronized FieldType getField(){
+    if (field == null)
+        field = computeFieldValue();
+    return field;
+}
+```
+
+#### lazy static init (lazy initialization holder class idiom)
+```java
+private static class FieldHolder{
+    static final FieldType field = computeFieldValue;
+}
+private static FieldType getField(){
+    return FieldHolder.field;
+}
+```
+* This guarantee that a class will not be initialized until it is used
+* getField method is not synchronized and performs only a field access (no access cost)
+
+#### Lazy init for instance field (double-check idiom)
+```java
+private volatile FieldType field;
+
+private FieldType getField(){
+    FieldType result = field;
+    if (result != null) // First check (no locking)
+        return result;
+    
+    synchronized(this){
+        if (field == null) // second check (with locking)
+            field = computeFieldValue();
+        return field;
+    }
+}
+```
+* Notice volatile is needed to make sure reading from memory directly
+* Ensure field is only read once in common case that it is already initialized
+* The second check with lock ensure that only one thread is doing the computeFieldValue()
+* holder class idiom is better for static field
+
+#### single-check idiom
+* If you can tolerate repeated initialization you can skip the synchronized block
+```java
+private volatile FieldType field;
+
+private FieldType getField(){
+    FieldType result = field;
+    if (result != null)
+        field = result = computeFieldValue(); // may invoked in multiple thread at the same time
+    return result;
+}
+```
+
