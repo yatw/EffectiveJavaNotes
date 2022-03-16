@@ -33,6 +33,10 @@
     * [Item 81: Prefer concurrency utilities to wait and notify](#item-81-prefer-concurrency-utilities-to-wait-and-notify)
     * [Item 82: Document thread safety](#item-82-document-thread-safety)
     * [Item 83: Use lazy initialization judiciously](#item-83-use-lazy-initialization-judiciously)
+    * [Item 84: Don't depend on the thread scheduler](#item-84-dont-depend-on-the-thread-scheduler)
+* [12 Serialization](#12-serialization)   
+    * [Item 85: Prefer alternatives to Java serialization](#item-85-prefer-alternatives-to-java-serialization)
+    
     
 ## 9 General Programming
 
@@ -486,3 +490,28 @@ private FieldType getField(){
 }
 ```
 
+### Item 84 Don't depend on the thread scheduler
+* With many runnable threads, an OS will try to determine which one run and for how long farly.
+* But policy may vary- any program that relies on the thread scheduler for correctness or performance is likely to be nonportable
+* Thread should not run if they are not doing useful work
+    * For executor framework, size the thread pools appropriately and keep tasks short
+    * threads should not busy-wait
+```java busy-wait
+while (true){
+   synchronized(this){
+      if (count == 0)
+        return;
+    }
+}
+```    
+* `Thread.yield` may worsen the performance on a different JVM
+* Thread priorities is rarely necessary and is not portable
+   
+## 12 Serialization
+ 
+### Item 85 Prefer alternatives to Java serialization
+* Serialization is vulnerable to ransomware and denial-of-service attack
+* Object of any type can be instantiated as long as it has Serializable interface
+* If purposely nested deeply a stream will take forever to deserialize (Dos)
+* Therefore never deserialize untrusted data
+* Use JSON or protobuf instead to translate between objects and byte sequences
