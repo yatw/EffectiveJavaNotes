@@ -36,6 +36,7 @@
     * [Item 84: Don't depend on the thread scheduler](#item-84-dont-depend-on-the-thread-scheduler)
 * [12 Serialization](#12-serialization)   
     * [Item 85: Prefer alternatives to Java serialization](#item-85-prefer-alternatives-to-java-serialization)
+    * [Item 86: Implement Serializable with great caution](#item-86-implement-serializable-with-great-caution)
     
     
 ## 9 General Programming
@@ -515,3 +516,12 @@ while (true){
 * If purposely nested deeply a stream will take forever to deserialize (Dos)
 * Therefore never deserialize untrusted data
 * Use JSON or protobuf instead to translate between objects and byte sequences
+
+### Item 86 Implement Serializable with great caution
+* When a class implements Serializable, its byte-stream encoding becomes part of its exported API
+* All future release with this serialized class need to match the original internal representation of the first release
+    * Use a custom serialized form
+* Increase testing effort because you have to test deserialized it in old releases
+* Classes designed for inheritance should rarely implement Serializable
+    * let the sub class implement Serializable instead, but will require the parent class to provide an accessible parameterless constructor
+* Inner classes should not implement Serializable, but static nested class can
