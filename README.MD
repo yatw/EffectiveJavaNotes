@@ -2,7 +2,9 @@
 
 
 ## Table of Contents
-
+* [8 Methods](#8-methods)   
+    * [Item 49: Check parameters for validity](#item-49-check-parameters-for-validity)    
+    * [Item 50 Make defensive copies when needed](#item-50-make-defensive-copies-when-needed)   
 * [9 General Programming](#9-general-programming)    
     * [Item 57: Minimize the scope of local variables](#item-57-minimize-the-scope-of-local-variables)   
     * [Item 58: Prefer for-each loops to traditional for loops](#item-58-prefer-for-each-loops-to-traditional-for-loops)   
@@ -38,6 +40,31 @@
     * [Item 85: Prefer alternatives to Java serialization](#item-85-prefer-alternatives-to-java-serialization)
     * [Item 86: Implement Serializable with great caution](#item-86-implement-serializable-with-great-caution)
     
+## 8 Methods
+
+### Item 49 Check parameters for validity
+* if a method fails to check its invalid parameters, several things can happen:
+    * method could fail with a confusing exception
+    * method return normally but silently compute the wrong result
+    * the method return normally but leave some object in a corrupted state
+* use `Objects.reequireNonNull()` and explicit fail the program as early as possible 
+* for unexported/ non-public method, can also use `assert`
+    * assert throw AssertionError when fail, and has no effect and no cost unless enabled through java command 
+* exception to this rule is if the check is expensive and the check is performed implicitly in the process
+
+### Item 50 Make defensive copies when needed
+* be careful when a method or constructor store a reference to a client-provided object in an internal data structure
+* if the client change the object after it has been validated, it could corrupt the internal state of the class for malicious purpose
+* solutions:
+    * force the client to provide immutable object
+    * create copy of these object before storing into our program
+* defensive copies are made before checking the validity of the parameters, and the validity check is performed on the copies rather than on the originals
+    * this is to prevent the object from changing again (from another thread), **after** it has been validated
+* do not use the `clone` method to make defensive copy of a parameter, the client could override the clone method and provide a untrusted subclass
+* do not return the internal stored object directly in getMethod, return another defensive copies instead   
+* when not do use defensive copying:
+    * if a class trusts its caller to not modify the internal component (they are in the same package)
+    * when damage would harm no one but the client (wrapper class)
     
 ## 9 General Programming
 
