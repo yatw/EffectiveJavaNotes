@@ -4,7 +4,9 @@
 ## Table of Contents
 * [8 Methods](#8-methods)   
     * [Item 49: Check parameters for validity](#item-49-check-parameters-for-validity)    
-    * [Item 50 Make defensive copies when needed](#item-50-make-defensive-copies-when-needed)   
+    * [Item 50: Make defensive copies when needed](#item-50-make-defensive-copies-when-needed)   
+    * [Item 51: Design method signatures carefully](#item-51-design-method-signatures-carefully)   
+    * [Item 52: Use overloading judiciously](#item-52-use-overloading-judiciously)   
 * [9 General Programming](#9-general-programming)    
     * [Item 57: Minimize the scope of local variables](#item-57-minimize-the-scope-of-local-variables)   
     * [Item 58: Prefer for-each loops to traditional for loops](#item-58-prefer-for-each-loops-to-traditional-for-loops)   
@@ -66,6 +68,45 @@
     * if a class trusts its caller to not modify the internal component (they are in the same package)
     * when damage would harm no one but the client (wrapper class)
     
+### Item 51 Design method signatures carefully
+* choose method names carefully
+* don't go overboard in providing convenience methods; many unused methods will complicate life
+* avoid long parameter lists
+    * break the method into smaller methods
+    * create helper classes to hold groups of parameters
+    * builder pattern for helper classes
+* for parameter types, favor interfaces over classes; don't restrict client to a certain implmentation
+* prefer two-element enums types to boolean parameters; easy for future changes
+
+### Item 52 Use overloading judiciously
+* When you have multiple methods with the same name, the choice of which overloading to invoke is made at compile time
+Example:
+```java
+Animal animal = new Dog();
+```
+when you pass this animal to an overload method, the `Animal` version will always be use despite it is actually a `Dog`   
+* Overriding, on the other hand, don't have this confusion 
+* Avoid exposing two overloadings with the same number of parameters (you can always give them different names)
+* Constructors are always overloaded, but you can use static factory methods
+* int and Integer object are easily confused like `list.remove(Integer)` and `list.remove(int)` do different things
+* overloading method that takes functional interfaces is extra complicating
+
+
+### Item 50 Make defensive copies when needed
+* be careful when a method or constructor store a reference to a client-provided object in an internal data structure
+* if the client change the object after it has been validated, it could corrupt the internal state of the class for malicious purpose
+* solutions:
+    * force the client to provide immutable object
+    * create copy of these object before storing into our program
+* defensive copies are made before checking the validity of the parameters, and the validity check is performed on the copies rather than on the originals
+    * this is to prevent the object from changing again (from another thread), **after** it has been validated
+* do not use the `clone` method to make defensive copy of a parameter, the client could override the clone method and provide a untrusted subclass
+* do not return the internal stored object directly in getMethod, return another defensive copies instead   
+* when not do use defensive copying:
+    * if a class trusts its caller to not modify the internal component (they are in the same package)
+    * when damage would harm no one but the client (wrapper class)    
+    
+        
 ## 9 General Programming
 
 ### Item 57 Minimize the scope of local variables
