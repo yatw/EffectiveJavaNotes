@@ -79,7 +79,7 @@
 * prefer two-element enums types to boolean parameters; easy for future changes
 
 ### Item 52 Use overloading judiciously
-* When you have multiple methods with the same name, the choice of which overloading to invoke is made at compile time
+* When you have multiple methods with the same name, the choice of which overloading to invoke is made at compile time  
 Example:
 ```java
 Animal animal = new Dog();
