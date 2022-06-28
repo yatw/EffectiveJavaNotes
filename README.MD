@@ -85,7 +85,7 @@ Example:
 Animal animal = new Dog();
 ```
 when you pass this animal to an overload method, the `Animal` version will always be use despite it is actually a `Dog`   
-* Overriding, on the other hand, don't have this confusion 
+* Overriding, on the other hand, don't have this confusion; it uses the runtime type to determine
 * Avoid exposing two overloadings with the same number of parameters (you can always give them different names)
 * Constructors are always overloaded, but you can use static factory methods
 * int and Integer object are easily confused like `list.remove(Integer)` and `list.remove(int)` do different things
