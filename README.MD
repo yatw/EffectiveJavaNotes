@@ -7,6 +7,8 @@
     * [Item 50: Make defensive copies when needed](#item-50-make-defensive-copies-when-needed)   
     * [Item 51: Design method signatures carefully](#item-51-design-method-signatures-carefully)   
     * [Item 52: Use overloading judiciously](#item-52-use-overloading-judiciously)   
+    * [Item 53: Use varargs judiciously](#item-53-use-varargs-judiciously)   
+    * [Item 54: Return empty collections or arrays, not nulls](#item-54-return-empty-collections-or-arrays-not-nulls)   
 * [9 General Programming](#9-general-programming)    
     * [Item 57: Minimize the scope of local variables](#item-57-minimize-the-scope-of-local-variables)   
     * [Item 58: Prefer for-each loops to traditional for loops](#item-58-prefer-for-each-loops-to-traditional-for-loops)   
@@ -91,21 +93,26 @@ when you pass this animal to an overload method, the `Animal` version will alway
 * int and Integer object are easily confused like `list.remove(Integer)` and `list.remove(int)` do different things
 * overloading method that takes functional interfaces is extra complicating
 
+### Item 53 Use varargs judiciously
+* varargs can take 0 to many arguments, if your method require one or more arguments you can do:
+```java
+static void somemethod(int firstArg, int... remainingArgs){ 
+```
+* varargs works by first creating an array whose size is the same number of arguments passed, putting the argument values into the array, and finally pass the array to the method
+* In performance-critical situations, every invocation of varargs causes array allocation and initialization
+If most of your call have three or fewer parameters then we can overload to avoid array cost:
+```java
+public void foo(){}
+public void foo(int a1){}
+public void foo(int a1, int a2){}
+public void foo(int a1, int a2, int... rest){}
+```
+### Item 54 Return empty collections or arrays, not nulls
+* it is ok to return empty array if no data; we don't want to do a null check on every call of this method
+* the performance cost of init an empty collection is neglectable; you can also continuelly return the same immutable empty collection
+    * like `Collections.emptySet()`, `Collections.emptyList()`, `Collections.emptyMap()`
+    * zero length array are also immutable
 
-### Item 50 Make defensive copies when needed
-* be careful when a method or constructor store a reference to a client-provided object in an internal data structure
-* if the client change the object after it has been validated, it could corrupt the internal state of the class for malicious purpose
-* solutions:
-    * force the client to provide immutable object
-    * create copy of these object before storing into our program
-* defensive copies are made before checking the validity of the parameters, and the validity check is performed on the copies rather than on the originals
-    * this is to prevent the object from changing again (from another thread), **after** it has been validated
-* do not use the `clone` method to make defensive copy of a parameter, the client could override the clone method and provide a untrusted subclass
-* do not return the internal stored object directly in getMethod, return another defensive copies instead   
-* when not do use defensive copying:
-    * if a class trusts its caller to not modify the internal component (they are in the same package)
-    * when damage would harm no one but the client (wrapper class)    
-    
         
 ## 9 General Programming
 
