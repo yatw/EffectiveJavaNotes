@@ -9,6 +9,7 @@
     * [Item 52: Use overloading judiciously](#item-52-use-overloading-judiciously)   
     * [Item 53: Use varargs judiciously](#item-53-use-varargs-judiciously)   
     * [Item 54: Return empty collections or arrays, not nulls](#item-54-return-empty-collections-or-arrays-not-nulls)   
+    * [Item 55: Return optionals judiciously](#item-55-return-optionals-judiciously)   
 * [9 General Programming](#9-general-programming)    
     * [Item 57: Minimize the scope of local variables](#item-57-minimize-the-scope-of-local-variables)   
     * [Item 58: Prefer for-each loops to traditional for loops](#item-58-prefer-for-each-loops-to-traditional-for-loops)   
@@ -113,6 +114,16 @@ public void foo(int a1, int a2, int... rest){}
     * like `Collections.emptySet()`, `Collections.emptyList()`, `Collections.emptyMap()`
     * zero length array are also immutable
 
+### Item 55 Return optionals judiciously
+* Optionals, like checked exceptions, force the user of an API to confront the fact that there may be no value returned
+* never return a null value from an optional-returning method; it defeats the purpose of optional
+* the client can specify a default value with `optional.orElse()` or throw exception with `optional.orElseThrow()`
+* container types like collections should not be wrapped in optionals
+    * return empty List<T> instead of Optional<List<T>>
+    * apply to collections, maps, streams, arrays, and optionals
+* optional is an object to be allocated and initialized, it has impact in performance-critical situations
+* never return an optional of boxed primitive type, there are `OptionalInt`, `OptionalLong`, and `OptionalDouble`
+* optional should only be used as return type, it should never be a key, value or element in a collection, think twice about making an optional field in a class    
         
 ## 9 General Programming
 
