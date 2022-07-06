@@ -10,6 +10,7 @@
     * [Item 53: Use varargs judiciously](#item-53-use-varargs-judiciously)   
     * [Item 54: Return empty collections or arrays, not nulls](#item-54-return-empty-collections-or-arrays-not-nulls)   
     * [Item 55: Return optionals judiciously](#item-55-return-optionals-judiciously)   
+    * [Item 56: Write doc comments for all exposed api elements](#item-56-write-doc-comments-for-all-exposed-api-elements)
 * [9 General Programming](#9-general-programming)    
     * [Item 57: Minimize the scope of local variables](#item-57-minimize-the-scope-of-local-variables)   
     * [Item 58: Prefer for-each loops to traditional for loops](#item-58-prefer-for-each-loops-to-traditional-for-loops)   
@@ -124,6 +125,15 @@ public void foo(int a1, int a2, int... rest){}
 * optional is an object to be allocated and initialized, it has impact in performance-critical situations
 * never return an optional of boxed primitive type, there are `OptionalInt`, `OptionalLong`, and `OptionalDouble`
 * optional should only be used as return type, it should never be a key, value or element in a collection, think twice about making an optional field in a class    
+        
+### Item 56 Write doc comments for all exposed API elements
+* document your methods with javadoc
+* the comment should describe what a method does not how it does its job
+* document preconditions and side effects
+* use `{@code}` tag to rendered in code and escape HTML character like <
+    * for multi-line code use `<pre>{@code}</pre>`
+* a good convention for summary description si to start with a verb phrase describe the action performed by the method
+
         
 ## 9 General Programming
 
