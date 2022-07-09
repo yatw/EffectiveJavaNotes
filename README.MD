@@ -2,6 +2,8 @@
 
 
 ## Table of Contents
+* [7 Lambdas and Streams](#7-lambdas-and-streams)   
+    * [Item 42: Prefer lambdas to anonymous classes](#item-42-prefer-lambdas-to-anonymous-classes)    
 * [8 Methods](#8-methods)   
     * [Item 49: Check parameters for validity](#item-49-check-parameters-for-validity)    
     * [Item 50: Make defensive copies when needed](#item-50-make-defensive-copies-when-needed)   
@@ -45,6 +47,32 @@
 * [12 Serialization](#12-serialization)   
     * [Item 85: Prefer alternatives to Java serialization](#item-85-prefer-alternatives-to-java-serialization)
     * [Item 86: Implement Serializable with great caution](#item-86-implement-serializable-with-great-caution)
+    
+## 7 Lambdas and Streams
+
+### Item 42 Prefer lambdas to anonymous classes
+We can pass anonymous class into a function:
+```java
+Collections.sort(words, new Comparator<String>(){
+    public int compare(String s1, String s2){
+        return Integer.compare(s1.length(), s2.length());
+    }   
+})
+```
+We can shorten it with lambdas
+```java
+Collections.sort(words,
+  (s1, s2) -> Integer.compare(s1.length(), s2.length()));
+```
+* compiler is able to interfer the type of s1, s2 and return type base on `words`, if `words` is a raw type List then it won't compile
+* one line is ideal for a lambda, and three lines is a reasonable maximum
+* Lambda drawbacks:
+    * unlike a normal method, it lacks name and javadoc
+    * `this` in lambda refer to class using this lambda, not the lambda itself
+    * can't change a variable outside of the lambda scope (unless variable is final wrapper obj, but still not thread-safe)
+    * limit to functional interfaces (interface with single abstract method)
+    * cannot reliably serialize and deserialize them across implementations
+   
     
 ## 8 Methods
 
