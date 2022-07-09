@@ -3,7 +3,8 @@
 
 ## Table of Contents
 * [7 Lambdas and Streams](#7-lambdas-and-streams)   
-    * [Item 42: Prefer lambdas to anonymous classes](#item-42-prefer-lambdas-to-anonymous-classes)    
+    * [Item 42: Prefer lambdas to anonymous classes](#item-42-prefer-lambdas-to-anonymous-classes)   
+    * [Item 43: Prefer method references to lambdas](#item-43-prefer-method-references-to-lambdas)     
 * [8 Methods](#8-methods)   
     * [Item 49: Check parameters for validity](#item-49-check-parameters-for-validity)    
     * [Item 50: Make defensive copies when needed](#item-50-make-defensive-copies-when-needed)   
@@ -73,6 +74,21 @@ Collections.sort(words,
     * limit to functional interfaces (interface with single abstract method)
     * cannot reliably serialize and deserialize them across implementations
    
+
+### Item 43 Prefer method references to lambdas
+Beside lambda there is also method reference
+```java
+map.merge(key, value, Integer::sum);
+```
+which is equivalent to:
+```java
+map.merge(key, value, (count, incr) -> count + incr);
+```
+* There is nothing lambda can do that method reference cannot do
+* If something is too large to put into a lambda, you can extract that into a method and use a method reference
+* occasionally a lambda is more succinct than method reference when the method is in the same class
+![](resource/43.jpg)
+
     
 ## 8 Methods
 
