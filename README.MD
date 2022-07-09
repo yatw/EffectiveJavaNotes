@@ -4,7 +4,8 @@
 ## Table of Contents
 * [7 Lambdas and Streams](#7-lambdas-and-streams)   
     * [Item 42: Prefer lambdas to anonymous classes](#item-42-prefer-lambdas-to-anonymous-classes)   
-    * [Item 43: Prefer method references to lambdas](#item-43-prefer-method-references-to-lambdas)     
+    * [Item 43: Prefer method references to lambdas](#item-43-prefer-method-references-to-lambdas) 
+    * [Item 44: Favor the use of standard functional interfaces](#item-44-favor-the-use-of-standard-functional-interfaces)         
 * [8 Methods](#8-methods)   
     * [Item 49: Check parameters for validity](#item-49-check-parameters-for-validity)    
     * [Item 50: Make defensive copies when needed](#item-50-make-defensive-copies-when-needed)   
@@ -88,6 +89,28 @@ map.merge(key, value, (count, incr) -> count + incr);
 * If something is too large to put into a lambda, you can extract that into a method and use a method reference
 * occasionally a lambda is more succinct than method reference when the method is in the same class
 ![](resource/43.jpg)
+
+
+### Item 44 Favor the use of standard functional interfaces
+* When we write a method that accepts a lambda, we need to declare the parameter as a functional interface type
+* We can write our own functional interfaces, but thare are a lot of standard one written already
+![](resource/44.jpg)
+* There are 43 interfaces in `java.util.Function` but they are all derive from the above basic types
+    * UnaryOperator operate on object reference types
+    * BinaryOperator for result and argument types are the same
+    * Predicate takes an argument and return a boolean
+    * Function for argument and return types differ
+    * Supplier takes no arguments and returns a value
+    * Consumer takes an argument and returns nothing
+* don't use basic functional interfaces with boxed primitives instead of primitive functional interfaces ([item 61]((#item-61-prefer-primitive-types-to-boxed-primitives)))
+* write your own functional interfaces when:
+    * it is commonly used and benefit from descriptive name
+    * has a strong contract associated with it (force caller to implement some methods)
+    * benefit from custom default methods
+* if you write your own, always use `@FunctionalInterface` annotation
+    * it must have exactly one abstract method to compile
+    * signal enabling of lambdas
+* don't overload methods with functional interfaces as argument, it is confusing    
 
     
 ## 8 Methods
