@@ -5,7 +5,8 @@
 * [7 Lambdas and Streams](#7-lambdas-and-streams)   
     * [Item 42: Prefer lambdas to anonymous classes](#item-42-prefer-lambdas-to-anonymous-classes)   
     * [Item 43: Prefer method references to lambdas](#item-43-prefer-method-references-to-lambdas) 
-    * [Item 44: Favor the use of standard functional interfaces](#item-44-favor-the-use-of-standard-functional-interfaces)         
+    * [Item 44: Favor the use of standard functional interfaces](#item-44-favor-the-use-of-standard-functional-interfaces) 
+    * [Item 45: Use Stream Judiciously](#item-45-use-streams-judiciously)                 
 * [8 Methods](#8-methods)   
     * [Item 49: Check parameters for validity](#item-49-check-parameters-for-validity)    
     * [Item 50: Make defensive copies when needed](#item-50-make-defensive-copies-when-needed)   
@@ -112,6 +113,20 @@ map.merge(key, value, (count, incr) -> count + incr);
     * signal enabling of lambdas
 * don't overload methods with functional interfaces as argument, it is confusing    
 
+### Item 45 Use streams judiciously
+* stream pipeline consists of a source stream followed by zero or more intermediate operations and one terminal operation
+* stream pipelines are evaluated lazily: evaluation doesn't start until the terminal operation is invoked
+* overuse of stream make code hard to read and unmaintainable
+* streams rely on lambda, a list of things good with streams:
+    * Uniformly transform sequences of elements
+    * Filter sequences of elements
+    * Combine sequences of elements using a single operation (for example to add them, concatenate them, or compute their min)
+    * Accumulate sequences of elements into a collection, perhaps grouping them by some common attribute
+    * Search a sequence of elements for an element satisfying some criterion
+* a list of things stream cannot do:
+    * modify any local variable in scope (lambda can only read final variables)
+    * return from enclosing method, break or continue a loop, or throw checked exception
+    * hard to access the original value of some element before some stream operation 
     
 ## 8 Methods
 
