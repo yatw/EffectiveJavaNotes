@@ -6,7 +6,8 @@
     * [Item 42: Prefer lambdas to anonymous classes](#item-42-prefer-lambdas-to-anonymous-classes)   
     * [Item 43: Prefer method references to lambdas](#item-43-prefer-method-references-to-lambdas) 
     * [Item 44: Favor the use of standard functional interfaces](#item-44-favor-the-use-of-standard-functional-interfaces) 
-    * [Item 45: Use Stream Judiciously](#item-45-use-streams-judiciously)                 
+    * [Item 45: Use Stream Judiciously](#item-45-use-streams-judiciously)       
+    * [Item 46: Prefer side-effect-free functions in streams](#item-46-prefer-side-effect-free-functions-in-streams)                           
 * [8 Methods](#8-methods)   
     * [Item 49: Check parameters for validity](#item-49-check-parameters-for-validity)    
     * [Item 50: Make defensive copies when needed](#item-50-make-defensive-copies-when-needed)   
@@ -127,6 +128,45 @@ map.merge(key, value, (count, incr) -> count + incr);
     * modify any local variable in scope (lambda can only read final variables)
     * return from enclosing method, break or continue a loop, or throw checked exception
     * hard to access the original value of some element before some stream operation 
+
+### Item 46 Prefer side-effect-free functions in streams
+* a pure function is one whose result depends only on its input; it does not depend on any mutable state, nor it update any state
+* stream sequence of transformations each stage should be pure function  
+Example
+```java
+// Uses the streams API but not the paradigm
+Map<String, Long> freq = new HashMap<>();
+try( Stream<String> words = new Scanner(file).tokens()){
+    words.forEach(word -> {
+        freq.merge(word.toLowerCase(), 1L, Long::sum);  
+    });   
+}
+```
+^ This derives no benefits from the streams API; doing all its work in the forEach operation and mutates the external state (freq)
+```java
+// correct use of streams
+Map<String, Long> freq;
+try( Stream<String> words = new Scanner(file).tokens()){
+    freq = words.collect(groupingBy(String::toLowerCase, counting()));
+}
+```
+* The forEach operation should be used only to report the result of a stream computation, not to perform the computation
+* what is preventing most programmer from writing the second version is the unfamiliarity of the Collectors method
+    * `toList`, `toSet` are straightforward
+    * `toMap` have multiple versions
+```java
+// Basic toMap
+String[] a = new String[]{"af", "ras5", "afd4"};
+Map<String, String> m = Arrays.stream(a).collect(toMap(k -> k, v -> v));
+System.out.println(m); // {ras5=ras5, af=af, afd4=afd4}
+
+^ this throw exception when you have multiple values map to the same key
+
+// Resolve conflict version
+Map<String, String> sss = Arrays.stream(ff).collect(toMap(k -> k, v -> v, (a,b) -> a)); // always pick the first when you have multiple
+ 
+``` 
+* Learn `groupingBy` and `joining` to use with Collector   
     
 ## 8 Methods
 
