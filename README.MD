@@ -7,7 +7,8 @@
     * [Item 43: Prefer method references to lambdas](#item-43-prefer-method-references-to-lambdas) 
     * [Item 44: Favor the use of standard functional interfaces](#item-44-favor-the-use-of-standard-functional-interfaces) 
     * [Item 45: Use Stream Judiciously](#item-45-use-streams-judiciously)       
-    * [Item 46: Prefer side-effect-free functions in streams](#item-46-prefer-side-effect-free-functions-in-streams)                           
+    * [Item 46: Prefer side-effect-free functions in streams](#item-46-prefer-side-effect-free-functions-in-streams)  
+    * [Item 47: Prefer Collection to Stream as a return type](#item-47-prefer-collection-to-stream-as-a-return-type)                                                    
 * [8 Methods](#8-methods)   
     * [Item 49: Check parameters for validity](#item-49-check-parameters-for-validity)    
     * [Item 50: Make defensive copies when needed](#item-50-make-defensive-copies-when-needed)   
@@ -167,6 +168,26 @@ Map<String, String> sss = Arrays.stream(ff).collect(toMap(k -> k, v -> v, (a,b) 
  
 ``` 
 * Learn `groupingBy` and `joining` to use with Collector   
+
+### Item 47: Prefer Collection to Stream as a return type
+* we cannot do for each loop on a stream because stream does not extend iterable
+    * need to convert to a collection or write a adapter like below
+```java
+// Adapter from Stream<E> to Iterable<E>
+public static <E> Iterable<E> iterableOf(Stream<E> stream){
+    return strem::iterator;
+}
+// use it like this
+for (Something p: iterableOf(source)){
+  // do something with p
+}
+```
+* `Collection` interface is a subtype of `Iterable` and can convert to stream therefore it is generally the best return type for a public, sequence-returning method
+* If you have a large collection, stream would be the better option because [it takes no memory beside the source](https://stackoverflow.com/a/29805049/5777189)
+* try to make your api useable to both users who want stream and user who want iterate
+    * if you have a collection available and it is small, return a standard collection such as `ArrayList`
+    * or write your own custom collection
+    * or return stream or iterable
     
 ## 8 Methods
 
