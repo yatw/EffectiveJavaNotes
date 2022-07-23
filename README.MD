@@ -8,7 +8,8 @@
     * [Item 44: Favor the use of standard functional interfaces](#item-44-favor-the-use-of-standard-functional-interfaces) 
     * [Item 45: Use Stream Judiciously](#item-45-use-streams-judiciously)       
     * [Item 46: Prefer side-effect-free functions in streams](#item-46-prefer-side-effect-free-functions-in-streams)  
-    * [Item 47: Prefer Collection to Stream as a return type](#item-47-prefer-collection-to-stream-as-a-return-type)                                                    
+    * [Item 47: Prefer Collection to Stream as a return type](#item-47-prefer-collection-to-stream-as-a-return-type)    
+    * [Item 48: Use caution when making streams parallel](#item-48-use-caution-when-making-streams-parallel)                                                                                                
 * [8 Methods](#8-methods)   
     * [Item 49: Check parameters for validity](#item-49-check-parameters-for-validity)    
     * [Item 50: Make defensive copies when needed](#item-50-make-defensive-copies-when-needed)   
@@ -188,6 +189,12 @@ for (Something p: iterableOf(source)){
     * if you have a collection available and it is small, return a standard collection such as `ArrayList`
     * or write your own custom collection
     * or return stream or iterable
+    
+### Item 48 Use caution when making streams parallel
+* Do not parallelize stream pipelines indiscriminately; the performance consequence may be disastrous
+* performance gains from parallelism are best on streams over ArrayList, HashMap, HashSet, arrays because these data structures can be cheaply split into subranges of any size
+* **Revisit when get better at parallel stream**    
+    
     
 ## 8 Methods
 
