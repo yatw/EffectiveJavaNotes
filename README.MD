@@ -2,6 +2,8 @@
 
 
 ## Table of Contents
+* [6 Enums and Annotations](#6-enums-and-annotations)   
+    * [Item 34: Use Enums instead of int constants](#item-34-use-enums-instead-of-int-constants)  
 * [7 Lambdas and Streams](#7-lambdas-and-streams)   
     * [Item 42: Prefer lambdas to anonymous classes](#item-42-prefer-lambdas-to-anonymous-classes)   
     * [Item 43: Prefer method references to lambdas](#item-43-prefer-method-references-to-lambdas) 
@@ -53,6 +55,128 @@
 * [12 Serialization](#12-serialization)   
     * [Item 85: Prefer alternatives to Java serialization](#item-85-prefer-alternatives-to-java-serialization)
     * [Item 86: Implement Serializable with great caution](#item-86-implement-serializable-with-great-caution)
+
+
+## 6 Enums and Annotations
+
+### Item 34 Use Enums instead of int constants
+* Before enum was added to Java, a common pattern for representing a finite group of constants was to declare `final int`
+```java
+// The  int enum pattern
+public static final int APPLE_FUJI = 0;
+public static final int ORANGE_NAVEL = 0;
+```
+* It has a list of shortcomings:
+    * compiler won't alert you, if you pass an apple to a method that expects an orange (they are both `int`)
+    * if the value of an int enum is changed, the clients must recompiled or it will still run with incorrect behavior
+    * printing the `int` is not meaningful
+    * no reliable way to iterate over all the `int` enum
+    * can't optain the size of `int` enum group
+* There is also the String enum pattern
+    * lead to clients hard coding the string constants instead of using the field name
+    * easy typo that can't be check by compiler
+    * performance drop with the string comparision    
+* enum solves all of the above with: 
+    * you can add or reorder constants in an enum without recompiling its clients
+    * customize printable strings by overriding the `toString` method
+    * if we remove a enum constant, any client using the removed enum constants will simply not compile (better than run incorrectly)
+* This is an example to associate data with enum constants by declaring instance fields and write a constructor
+```java
+public enum Planet{
+		MERCURY(3.334e+23,2.234e6)
+		VENUS(4.234e+23,6.636e6)
+		EARTH(5.865e+23,6.256e6)
+		...
+
+		private final double mass;
+		private final double radius;
+
+		Planet(double mass, double radius){
+			this.mass = mass;
+			this.radius = radius;
+		}
+}
+```    
+* unless you have a compelling reason to expose an enum method to its clients, declare it private or package-private
+* if an enum is generally useful, declare it as top-level class; if its use is tied to a specific top-level class then it should be a member class of that top-level class
+* a common use for enum is to use the constance value to find the enum (reverse look up); we can do that with stream:
+```java
+// Implementing a fromString method on an enum type
+private static final Map<String, Operation> stringToEnum =Stream.of(values()).collect(toMap(Object::toString, e -> e));
+
+// Returns Operation for string, if any
+public static Optional<Operation> fromString(String symbol) {
+    return Optional.ofNullable(stringToEnum.get(symbol));
+}
+```
+##### Advance usage
+* If you need to associate behavior with each enum by writing switch, consider `constant-specific method implementations`
+* Below code work but fragile; if you add a new enum constant but forget to update the switch case, it still compiles and become a bug
+```java
+public enum Operation {
+    PLUS, MINUS, TIMES, DIVIDE;
+    // Do the arithmetic operation represented by this constant
+    public double apply(double x, double y) {
+        switch(this) {
+            case PLUS: return x + y;
+            case MINUS: return x - y;
+            case TIMES: return x * y;
+            case DIVIDE: return x / y;
+        }
+    throw new AssertionError("Unknown op: "+ this);
+    }
+}
+```
+* Instead, declare an abstract method in the enum and override it with a concrete method for each enum constant
+    * if you add a new type, this force you to implement the abstract method
+```java
+// Enum type with constant-specific method implementations
+public enum Operation {
+    PLUS {public double apply(double x, double y){return x + y;}},
+    MINUS {public double apply(double x, double y){return x - y;}},
+    TIMES {public double apply(double x, double y){return x * y;}},
+    DIVIDE{public double apply(double x, double y){return x / y;}};
+    public abstract double apply(double x, double y);
+}
+```
+* There is also a nested enum strategy to delegates/remove the switch logic:
+```java
+// The strategy enum pattern
+enum PayrollDay {
+    MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY,SATURDAY(PayType.WEEKEND), SUNDAY(PayType.WEEKEND);
+
+    private final PayType payType;
+    PayrollDay(PayType payType) { this.payType = payType; }
+    PayrollDay() { this(PayType.WEEKDAY); } // Default
+
+    int pay(int minutesWorked, int payRate) {
+        return payType.pay(minutesWorked, payRate);
+    }
+
+    // The strategy enum type
+    private enum PayType {
+        WEEKDAY {
+            int overtimePay(int minsWorked, int payRate) {
+                return minsWorked <= MINS_PER_SHIFT ? 0 :(minsWorked - MINS_PER_SHIFT) * payRate / 2;
+            }
+        },
+        WEEKEND {
+            int overtimePay(int minsWorked, int payRate) {
+                return minsWorked * payRate / 2;
+            }
+        };
+
+        abstract int overtimePay(int mins, int payRate);
+
+        private static final int MINS_PER_SHIFT = 8 * 60;
+
+        int pay(int minsWorked, int payRate) {
+            int basePay = minsWorked * payRate;
+            return basePay + overtimePay(minsWorked, payRate);
+        }
+    }
+}
+```
     
 ## 7 Lambdas and Streams
 
