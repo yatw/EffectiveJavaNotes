@@ -4,6 +4,8 @@
 ## Table of Contents
 * [6 Enums and Annotations](#6-enums-and-annotations)   
     * [Item 34: Use Enums instead of int constants](#item-34-use-enums-instead-of-int-constants)  
+    * [Item 35: Use instance fields instead of ordinals](#item-35-use-instance-fields-instead-of-ordinals)  
+    * [Item 36: Use EnumSet instead of bit fields](#item-36-use-enumset-instead-of-bit-fields)  
 * [7 Lambdas and Streams](#7-lambdas-and-streams)   
     * [Item 42: Prefer lambdas to anonymous classes](#item-42-prefer-lambdas-to-anonymous-classes)   
     * [Item 43: Prefer method references to lambdas](#item-43-prefer-method-references-to-lambdas) 
@@ -177,7 +179,50 @@ enum PayrollDay {
     }
 }
 ```
+   
+### Item 35: Use instance fields instead of ordinals
+* If you try to associate a number with an enum constant, using `ordinal()` is usually a bad idea
+* ordinal returns the numerical position of the constant in the enum
+    * need to make sure the constants are always ordered correctly
+    * there is no way to have multiple constants with the same value
+    * if you have a large number, you are forced to have placeholder constants for all values before that large number
+* just do the normal declaring instance fields and write a constructor
+* one good use case of ordinal is if you are listing the columns headers in a csv file; it doesn't run into the problems above    
     
+### Item 36: Use EnumSet instead of bit fields
+```java
+// Bit field enumeration constants - OBSOLETE!
+public class Text {
+    public static final int STYLE_BOLD = 1 << 0; // 1
+    public static final int STYLE_ITALIC = 1 << 1; // 2
+    public static final int STYLE_UNDERLINE = 1 << 2; // 4
+    public static final int STYLE_STRIKETHROUGH = 1 << 3; // 8
+    // Parameter is bitwise OR of zero or more STYLE_ constants
+    public void applyStyles(int styles) { ... }
+}
+// call it like this:
+text.applyStyles(STYLE_BOLD | STYLE_ITALIC);
+```
+* bit fields have all the disadvantages of int enum constants and more
+    * hard to print into meanintful string
+    * hard to iterate through elements represented
+    * cannot excced (32 or 64) items
+* bit fields are just a `set` of items in essence
+* `EnumSet` implements the Set interface (get all the set benefit)
+    * internally 64 or fewer elements is represented with a single long, so performance is comparable to bit field 
+
+Example
+```java
+// EnumSet - a modern replacement for bit fields
+public class Text {
+    public enum Style { BOLD, ITALIC, UNDERLINE, STRIKETHROUGH }
+    // Any Set could be passed in, but EnumSet is clearly best
+    public void applyStyles(Set<Style> styles) { ... }
+}
+// call it like this
+text.applyStyles(EnumSet.of(Style.BOLD, Style.ITALIC));
+```
+
 ## 7 Lambdas and Streams
 
 ### Item 42 Prefer lambdas to anonymous classes
@@ -862,7 +907,7 @@ private FieldType getField(){
 ```
 
 ### Item 84 Don't depend on the thread scheduler
-* With many runnable threads, an OS will try to determine which one run and for how long farly.
+* With many runnable threads, an OS will try to determine which one run and for how long fairly
 * But policy may vary- any program that relies on the thread scheduler for correctness or performance is likely to be nonportable
 * Thread should not run if they are not doing useful work
     * For executor framework, size the thread pools appropriately and keep tasks short
