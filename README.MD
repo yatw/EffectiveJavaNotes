@@ -5,7 +5,9 @@
 * [6 Enums and Annotations](#6-enums-and-annotations)   
     * [Item 34: Use Enums instead of int constants](#item-34-use-enums-instead-of-int-constants)  
     * [Item 35: Use instance fields instead of ordinals](#item-35-use-instance-fields-instead-of-ordinals)  
-    * [Item 36: Use EnumSet instead of bit fields](#item-36-use-enumset-instead-of-bit-fields)  
+    * [Item 36: Use Enu:wqmSet instead of bit fields](#item-36-use-enumset-instead-of-bit-fields)  
+    * [Item 37: Use EnumMap instead of ordinal indexing](#item-37-use-enummap-instead-of-ordinal-indexing) 
+    * [Item 38: Emulate extensible enums with interfaces](#item-38-emulate-extensible-enums-with-interfaces) 
 * [7 Lambdas and Streams](#7-lambdas-and-streams)   
     * [Item 42: Prefer lambdas to anonymous classes](#item-42-prefer-lambdas-to-anonymous-classes)   
     * [Item 43: Prefer method references to lambdas](#item-43-prefer-method-references-to-lambdas) 
@@ -222,6 +224,35 @@ public class Text {
 // call it like this
 text.applyStyles(EnumSet.of(Style.BOLD, Style.ITALIC));
 ```
+
+### Item 37: Use EnumMap instead of ordinal indexing
+* if you ever found yourself grouping objects by enum with array:
+```java
+class Plant{
+    enum LifeCycle { ANNUAL, PERENNIAL, BIENNIAL }
+}
+Set<Plant>[] array = new Set[Plant.LifeCycle.values().length]; 
+// idea: each index is a set of plants, and use the LifeCycle.ordinal() to find the correct index
+```
+* just do `EnumMap<Enum, Set<Plant>>` instead, get the type safety of `Map` and speed of array
+* `EnumMap` uses array implementation above internally, so it is comparable in speed with ordinal-indexed array
+```java
+Map<Plant.LifeCycle, Set<Plant>> map = new EnumMap<>(Plant.LifeCycle.class);
+// now you can add the item in 1 by 1
+
+// you can also use stream, create a map with all items populated in the map
+// make sure to specify in groupingBy to use EnumMap as map implementation
+garden.stream().collect(groupingBy(p->p.lifeCycle), ()-> new EnumMap<>(LifeCycle.class), toSet())));
+```
+* the book also included a 2d array replaced by nested `EnumMap` example
+
+### Item 38: Emulate extensible enums with interfaces
+* you cannot extend enum in Java
+    * main reason: it defeats the point of enum being well-known set of values (parent not aware of child contstants)
+* All enums implicitly extend java.lang.Enum. Since Java does not support multiple inheritance, an enum cannot extend anything else
+* so yes there is a [interface pattern](https://stackoverflow.com/a/27670163/5777189)
+    * the idea is you can create another enum and manually add more constants
+    * then use the interface type as method argument
 
 ## 7 Lambdas and Streams
 
