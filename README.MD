@@ -8,6 +8,7 @@
     * [Item 36: Use Enu:wqmSet instead of bit fields](#item-36-use-enumset-instead-of-bit-fields)  
     * [Item 37: Use EnumMap instead of ordinal indexing](#item-37-use-enummap-instead-of-ordinal-indexing) 
     * [Item 38: Emulate extensible enums with interfaces](#item-38-emulate-extensible-enums-with-interfaces) 
+    * [Item 39: Prefer Annotations to naming pattern](#item-39-prefer-annotations-to-naming-patterns) 
 * [7 Lambdas and Streams](#7-lambdas-and-streams)   
     * [Item 42: Prefer lambdas to anonymous classes](#item-42-prefer-lambdas-to-anonymous-classes)   
     * [Item 43: Prefer method references to lambdas](#item-43-prefer-method-references-to-lambdas) 
@@ -182,7 +183,7 @@ enum PayrollDay {
 }
 ```
    
-### Item 35: Use instance fields instead of ordinals
+### Item 35 Use instance fields instead of ordinals
 * If you try to associate a number with an enum constant, using `ordinal()` is usually a bad idea
 * ordinal returns the numerical position of the constant in the enum
     * need to make sure the constants are always ordered correctly
@@ -191,7 +192,7 @@ enum PayrollDay {
 * just do the normal declaring instance fields and write a constructor
 * one good use case of ordinal is if you are listing the columns headers in a csv file; it doesn't run into the problems above    
     
-### Item 36: Use EnumSet instead of bit fields
+### Item 36 Use EnumSet instead of bit fields
 ```java
 // Bit field enumeration constants - OBSOLETE!
 public class Text {
@@ -225,7 +226,7 @@ public class Text {
 text.applyStyles(EnumSet.of(Style.BOLD, Style.ITALIC));
 ```
 
-### Item 37: Use EnumMap instead of ordinal indexing
+### Item 37 Use EnumMap instead of ordinal indexing
 * if you ever found yourself grouping objects by enum with array:
 ```java
 class Plant{
@@ -246,13 +247,24 @@ garden.stream().collect(groupingBy(p->p.lifeCycle), ()-> new EnumMap<>(LifeCycle
 ```
 * the book also included a 2d array replaced by nested `EnumMap` example
 
-### Item 38: Emulate extensible enums with interfaces
+### Item 38 Emulate extensible enums with interfaces
 * you cannot extend enum in Java
     * main reason: it defeats the point of enum being well-known set of values (parent not aware of child contstants)
 * All enums implicitly extend java.lang.Enum. Since Java does not support multiple inheritance, an enum cannot extend anything else
 * so yes there is a [interface pattern](https://stackoverflow.com/a/27670163/5777189)
     * the idea is you can create another enum and manually add more constants
     * then use the interface type as method argument
+    
+### Item 39 Prefer annotations to naming patterns
+* Before annotation was introduced, some tool or framework demands class or method to follow some special naming convention to indicate special treatment
+    * typo would mean silent failure, program compile but wouldn't run the special treatment
+    * cannot ensure the naming convention is applied on the right thing (method intented naming convention written on a class)
+    * cannot associate parameter values with the method
+* This chapter included example on:
+    * how to write an `annotation` (interface like)
+    * how to use the `annotation` (through reflection and `isAnnotationPresent(Test.class)`)
+    * how to pass parameter (and multi-parameters) to the annotation
+    * there is also `@Repeatable` as another way to do multivalued annotations
 
 ## 7 Lambdas and Streams
 
