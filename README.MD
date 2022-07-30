@@ -9,6 +9,8 @@
     * [Item 37: Use EnumMap instead of ordinal indexing](#item-37-use-enummap-instead-of-ordinal-indexing) 
     * [Item 38: Emulate extensible enums with interfaces](#item-38-emulate-extensible-enums-with-interfaces) 
     * [Item 39: Prefer Annotations to naming pattern](#item-39-prefer-annotations-to-naming-patterns) 
+    * [Item 40: Consistently use the Override annotation](#item-40-consistently-use-the-override-annotation) 
+    * [Item 41: Use marker interfaces to define types](#item-41-use-marker-interfaces-to-define-types) 
 * [7 Lambdas and Streams](#7-lambdas-and-streams)   
     * [Item 42: Prefer lambdas to anonymous classes](#item-42-prefer-lambdas-to-anonymous-classes)   
     * [Item 43: Prefer method references to lambdas](#item-43-prefer-method-references-to-lambdas) 
@@ -265,6 +267,29 @@ garden.stream().collect(groupingBy(p->p.lifeCycle), ()-> new EnumMap<>(LifeCycle
     * how to use the `annotation` (through reflection and `isAnnotationPresent(Test.class)`)
     * how to pass parameter (and multi-parameters) to the annotation
     * there is also `@Repeatable` as another way to do multivalued annotations
+
+### Item 40 Consistently use the Override annotation
+* use the Override annotation on every method declaration that you believe to override a superclass method
+* it is easy to make a mistake, thinking you overrided a method but you overloaded it instead
+```java
+// for example the Object.equals method
+public boolean equals(Bigram b){
+    return b.first == first && b.second == second;
+}
+// the real Object.equals method take a Object as argument, so this ^ is a bug on any map & set
+```
+* it is good practice to use Override on concrete implementations of interface methods to ensure that the signature is correct
+* in an abstract class or an interface it is worth annotating all methods that you believe to override superclass or superinterface methods to ensure it does not accidentally add any new methods to the interface
+
+### Item 41 Use marker interfaces to define types
+* marker interface is an interface that contains no method declarations but merely to "mark" a class as having some property
+* there is also marker annotations that function similarly
+* the advantage of marker interface over annotation is:
+    * define a type that you can use in method and variable (compiler protection)
+    * you can control a marker is only applicable to an implementation of a particular interface
+* the advantage of a marker annotation over interface is:
+    * good for consistency in annotation-based frameworks
+    * can apply to program element other than a class or interface
 
 ## 7 Lambdas and Streams
 
