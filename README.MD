@@ -2,6 +2,8 @@
 
 
 ## Table of Contents
+* [5 Generics](#5-generics)   
+    * [Item 26: Don't use raw type](#item-26-dont-use-raw-type)  
 * [6 Enums and Annotations](#6-enums-and-annotations)   
     * [Item 34: Use Enums instead of int constants](#item-34-use-enums-instead-of-int-constants)  
     * [Item 35: Use instance fields instead of ordinals](#item-35-use-instance-fields-instead-of-ordinals)  
@@ -63,6 +65,42 @@
     * [Item 85: Prefer alternatives to Java serialization](#item-85-prefer-alternatives-to-java-serialization)
     * [Item 86: Implement Serializable with great caution](#item-86-implement-serializable-with-great-caution)
 
+## 5 Generics
+
+### Item 26 Don't use raw type
+* raw types are generic types without their type parameters
+* Java still allow raw type only for the compatibility with legacy code written before generic was introduced
+* if you use raw types, you lose the safety and expressiveness benefits of generics (compiler won't let you put the wrong type of object into a collection)
+* it is fine to use `List<Object>` to allow insertion of arbitrary objects
+* to demonstrate the different between raw type `List` and `List<Object>`
+    * raw type opted out of the generic type system for compiler to check
+    * below code compile successfully, but throw `ClassCastException` at runtime
+    * if we change the argument `List` to `List<Object>`, the compiler will prevent `List<String>` from passing to the method
+    * this mean, we lose type safety if we use a raw type such as List, but not if we use a parameterized type such as `List<Object>`
+```java
+
+public static void main(String[] args) {
+    List<String> strings = new ArrayList<>();
+    unsafeAdd(strings, Integer.valueOf(42));
+    String s = strings.get(0); // Has compiler-generated cast
+}
+
+private static void unsafeAdd(List list, Object o) {
+    list.add(o);
+}
+```
+
+* if you want to use a generic type but you don't know or care what the actual type parameter is, use the `?` (unbounded wilcard types)
+* there are exceptions to when we should use raw type:
+    * class literals such as `List.class`, `String[].class`, and `int.class` but not `List<String>.class` nor `List<?>class`
+    * `instanceof` operator because generic type information is erased at runtime
+```java
+// Legitimate use of raw type - instanceof operator
+if (o instanceof Set) { // Raw type
+    Set<?> s = (Set<?>) o; // Wildcard type
+    ...
+}
+```    
 
 ## 6 Enums and Annotations
 
