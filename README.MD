@@ -4,6 +4,8 @@
 ## Table of Contents
 * [5 Generics](#5-generics)   
     * [Item 26: Don't use raw type](#item-26-dont-use-raw-type)  
+    * [Item 27: Eliminate unchecked warnings](#item-27-eliminate-unchecked-warnings)  
+    * [Item 28: Prefer lists to arrays](#item-28-prefer-lists-to-arrays)  
 * [6 Enums and Annotations](#6-enums-and-annotations)   
     * [Item 34: Use Enums instead of int constants](#item-34-use-enums-instead-of-int-constants)  
     * [Item 35: Use instance fields instead of ordinals](#item-35-use-instance-fields-instead-of-ordinals)  
@@ -102,6 +104,29 @@ if (o instanceof Set) { // Raw type
 }
 ```    
 
+### Item 27 Eliminate unchecked warnings
+* if you can't eliminate a warning, but you can prove that the code that provoked the warning is typesafe, then (only then) suppress the warning with an `@SuppressWarnings("unchecked")` annotation
+* always use the `@SuppressWarnings` at the smallest scope possible
+* always add a comment explaining why it is safe to `@SuppressWarnings` 
+
+### Item 28 Prefer lists to arrays
+* **Generics are implemented by erasure. Meaning they enforce their type constraints only at compile time and discard (erase) their element type information at runtime**
+* arrays know and enforce their element type at runtime (bad)  
+```java
+// Example:
+// Fails at runtime!
+Object[] objectArray = new Long[1];
+objectArray[0] = "I don't fit in"; // Throws ArrayStoreException
+
+// Won't compile!
+List<Object> ol = new ArrayList<Long>(); // Incompatible types
+ol.add("I don't fit in");
+```
+* it is illegal to create an array of a generic type: none of these are legal: `new List<E>[]`, `new List<String>[]`, `new E[]`
+    * the reason is generic type constraint is erased during runtime, when mixing in array, you could add incorrect type into that array (defeat generic purpose)
+* when you get a generic array creationg error or unchecked cast warning on a cast to an array type, the best solution is to use `List<E>` instead of array `E[]`; sacrifice some performance in exchange of type safety    
+  
+    
 ## 6 Enums and Annotations
 
 ### Item 34 Use Enums instead of int constants
