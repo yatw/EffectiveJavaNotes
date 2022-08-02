@@ -5,11 +5,13 @@
 * [5 Generics](#5-generics)   
     * [Item 26: Don't use raw type](#item-26-dont-use-raw-type)  
     * [Item 27: Eliminate unchecked warnings](#item-27-eliminate-unchecked-warnings)  
-    * [Item 28: Prefer lists to arrays](#item-28-prefer-lists-to-arrays)  
+    * [Item 28: Prefer lists to arrays](#item-28-prefer-lists-to-arrays) 
+    * [Item 29: Favor generic types](#item-29-favor-generic-types)
+    * [Item 30: Favor generic methods](#item-30-favor-generic-methods)
 * [6 Enums and Annotations](#6-enums-and-annotations)   
     * [Item 34: Use Enums instead of int constants](#item-34-use-enums-instead-of-int-constants)  
     * [Item 35: Use instance fields instead of ordinals](#item-35-use-instance-fields-instead-of-ordinals)  
-    * [Item 36: Use Enu:wqmSet instead of bit fields](#item-36-use-enumset-instead-of-bit-fields)  
+    * [Item 36: Use EnumSet instead of bit fields](#item-36-use-enumset-instead-of-bit-fields)  
     * [Item 37: Use EnumMap instead of ordinal indexing](#item-37-use-enummap-instead-of-ordinal-indexing) 
     * [Item 38: Emulate extensible enums with interfaces](#item-38-emulate-extensible-enums-with-interfaces) 
     * [Item 39: Prefer Annotations to naming pattern](#item-39-prefer-annotations-to-naming-patterns) 
@@ -111,7 +113,7 @@ if (o instanceof Set) { // Raw type
 
 ### Item 28 Prefer lists to arrays
 * **Generics are implemented by erasure. Meaning they enforce their type constraints only at compile time and discard (erase) their element type information at runtime**
-* arrays know and enforce their element type at runtime (bad)  
+* arrays know and enforce their element type at runtime (less ideal than finding problem at compile)  
 ```java
 // Example:
 // Fails at runtime!
@@ -124,8 +126,33 @@ ol.add("I don't fit in");
 ```
 * it is illegal to create an array of a generic type: none of these are legal: `new List<E>[]`, `new List<String>[]`, `new E[]`
     * the reason is generic type constraint is erased during runtime, when mixing in array, you could add incorrect type into that array (defeat generic purpose)
+    * note that you can still declare a `E[]`, but you cannot do `new E[]`
 * when you get a generic array creationg error or unchecked cast warning on a cast to an array type, the best solution is to use `List<E>` instead of array `E[]`; sacrifice some performance in exchange of type safety    
   
+### Item 29 Favor generic types
+* this chapter shows that if you don't use generic you gonna need to do some cast
+```java
+E[] elements = (E[]) new Object[DEFAULT_INITIAL_CAPACITY];
+//or leave elements as Object[] and do the cast when you access the object
+```
+* type parameters have no restrictions: you can create a Stack, Stack<int[]>, Stack<List>, or Stack of any other object reference type
+* cannot create a generic of a primitive type. You can work around this restriction by using boxed primitive types
+
+### Item 30 Favor generic methods
+* here is an example of a basic generic method
+```java
+// Generic method
+public static <E> Set<E> union(Set<E> s1, Set<E> s2) {
+```
+* use recursive type bound for expression involving that type parameter itself, an example is a type want to compare only with elements of the same type
+```java
+public interface Comparable<T> {
+    int compareTo(T o);
+}
+
+public static <E extends Comparable<E>> E max(Collection<E> c);
+```
+    
     
 ## 6 Enums and Annotations
 
