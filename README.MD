@@ -8,6 +8,7 @@
     * [Item 28: Prefer lists to arrays](#item-28-prefer-lists-to-arrays) 
     * [Item 29: Favor generic types](#item-29-favor-generic-types)
     * [Item 30: Favor generic methods](#item-30-favor-generic-methods)
+    * [Item 31: Use bounded wildcards to increase api flexibility](#item-31-use-bounded-wildcards-to-increase-api-flexibility)
 * [6 Enums and Annotations](#6-enums-and-annotations)   
     * [Item 34: Use Enums instead of int constants](#item-34-use-enums-instead-of-int-constants)  
     * [Item 35: Use instance fields instead of ordinals](#item-35-use-instance-fields-instead-of-ordinals)  
@@ -105,6 +106,7 @@ if (o instanceof Set) { // Raw type
     ...
 }
 ```    
+![](resource/26.jpg)
 
 ### Item 27 Eliminate unchecked warnings
 * if you can't eliminate a warning, but you can prove that the code that provoked the warning is typesafe, then (only then) suppress the warning with an `@SuppressWarnings("unchecked")` annotation
@@ -152,8 +154,46 @@ public interface Comparable<T> {
 
 public static <E extends Comparable<E>> E max(Collection<E> c);
 ```
-    
-    
+
+### Item 31 Use bounded wildcards to increase API flexibility
+```java
+Stack<Number> numberStack = new Stack<>();
+Iterable<Integer> integers = ... ;
+numberStack.pushAll(integers);
+// if you have a list of Integer and you should be able to put it in a stack of Number, since Integer extends Number
+```
+* the above won't work because `List<Integer>` is not a subtype of `List<Number>`, call invariant
+* the solution is bounded wildcards
+```java
+// Wildcard type for a parameter that serves as an E producer
+public void pushAll(Iterable<? extends E> src) {
+    for (E e : src)
+        push(e);
+}
+// Wildcard type for parameter that serves as an E consumer
+public void popAll(Collection<? super E> dst) {
+  while (!isEmpty())
+    dst.add(pop());
+}
+```
+* since src **produce** the E, it extends; since dst **consume** the E, it super
+* the reasoning is to be flexible; for pushAll(), as long as the element in src is a subtype of E, we can put that element into a list of E; for popAll(), since we want store as much type of E into dst as possible, we make dst a parent of all E
+* do not use bounded wildcard types as return types, force them to use wilcard types in client code; the user of this method should not need to think about the wildcard types
+*  Comparables and Comparable are always consumers, so you should generally use Comparable<? super T> in preference to Comparable<T>
+```java
+public static <T extends Comparable<? super T>> T max(List<? extends T> list)
+```
+* there is also unbounded wildcard `List<?>` (Extreme rare usecase, [benefit](https://stackoverflow.com/q/7671072/5777189))
+    * it is better for public API because you can pass in a list-any list, and there is no type parameter to worry about
+```java
+// Two possible declarations for the swap method
+public static <E> void swap(List<E> list, int i, int j);
+public static void swap(List<?> list, int i, int j);
+```
+* The problem is that the type of list is List<?>, and you can’t put any value except null into a List<?>
+* also cannot add element into the list anymore, need to use a simple helper method (see book)
+
+
 ## 6 Enums and Annotations
 
 ### Item 34 Use Enums instead of int constants
