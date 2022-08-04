@@ -9,6 +9,7 @@
     * [Item 29: Favor generic types](#item-29-favor-generic-types)
     * [Item 30: Favor generic methods](#item-30-favor-generic-methods)
     * [Item 31: Use bounded wildcards to increase api flexibility](#item-31-use-bounded-wildcards-to-increase-api-flexibility)
+    * [Item 32: Combine generics and varargs judiciously](#item-32-combine-generics-and-varargs-judiciously)
 * [6 Enums and Annotations](#6-enums-and-annotations)   
     * [Item 34: Use Enums instead of int constants](#item-34-use-enums-instead-of-int-constants)  
     * [Item 35: Use instance fields instead of ordinals](#item-35-use-instance-fields-instead-of-ordinals)  
@@ -130,6 +131,19 @@ ol.add("I don't fit in");
     * the reason is generic type constraint is erased during runtime, when mixing in array, you could add incorrect type into that array (defeat generic purpose)
     * note that you can still declare a `E[]`, but you cannot do `new E[]`
 * when you get a generic array creationg error or unchecked cast warning on a cast to an array type, the best solution is to use `List<E>` instead of array `E[]`; sacrifice some performance in exchange of type safety    
+```java
+//https://stackoverflow.com/a/16381390/5777189
+// When you declare:
+  
+  public static <T> void foo(List<T>... bar) // the compiler converts it to
+  
+  public static <T> void foo(List<T>[] bar)// then to
+  
+  public static void foo(List[] bar) 
+  // because erasure, the generic type information is loss at run time;
+  // this open up a can of worms when used with varargs, because now you can add invalid type into this List[] (more on Item 32)
+```
+
   
 ### Item 29 Favor generic types
 * this chapter shows that if you don't use generic you gonna need to do some cast
@@ -177,7 +191,7 @@ public void popAll(Collection<? super E> dst) {
 }
 ```
 * since src **produce** the E, it extends; since dst **consume** the E, it super
-* the reasoning is to be flexible; for pushAll(), as long as the element in src is a subtype of E, we can put that element into a list of E; for popAll(), since we want store as much type of E into dst as possible, we make dst a parent of all E
+* the reasoning is to be flexible; for pushAll(), as long as the element in src is a subtype of E, we can put that element into a list of E; for popAll(), since we want store as much type of E into dst as possible, we make dst a parent of all type of E
 * do not use bounded wildcard types as return types, force them to use wilcard types in client code; the user of this method should not need to think about the wildcard types
 *  Comparables and Comparable are always consumers, so you should generally use Comparable<? super T> in preference to Comparable<T>
 ```java
@@ -193,6 +207,59 @@ public static void swap(List<?> list, int i, int j);
 * The problem is that the type of list is List<?>, and you can’t put any value except null into a List<?>
 * also cannot add element into the list anymore, need to use a simple helper method (see book)
 
+### Item 32 Combine generics and varargs judiciously
+* with generic, you cannot do this:
+```java
+        List<Object> c = new ArrayList<>();
+        List<String> d = new ArrayList<>();
+        c = d;
+```
+* but with array, you can do this:
+```java
+        String[] a = new String[]{"wtf", "wtf2"};
+        Object[] b = a;
+```
+* recall that we invoke a varargs method, an array is created to hold the varargs parameters
+* if we have varargs of generic, we can cause Heap pollution
+```java
+// Mixing generics and varargs can violate type safety!
+static void dangerous(List<String>... stringLists) {
+    List<Integer> intList = List.of(42);
+    Object[] objects = stringLists;
+    objects[0] = intList; // Heap pollution
+    String s = stringLists[0].get(0); // ClassCastException
+}
+```
+* this demonstrate it is unsafe to store a value in a generic varargs array parameter
+* the reason it is legal to declare a method with a generic varargs parameter but illegal to create a generic array explicitly
+* if a method with varargs parameters is invoked, you will get a [warning](https://stackoverflow.com/q/12462079/5777189)
+    * this force users of this method to do `@SuppressWarnings("unchecked")` at every call site
+    * after Java 7, you can add a `@SafeVarargs` to remove the warning
+    * adding this annotation means you can prove this method is typesafe
+    * a varargs parameters method is typesafe if:
+        * the method doesn't store anything into the array
+        * **doesn't give another method access to a generic varargs parameter array**
+* example of why passing the reference to the array make it unsafe        
+```java
+// UNSAFE - Exposes a reference to its generic parameter array!
+static <T> T[] toArray(T... args) {
+  return args;
+}
+static <T> T[] pickTwo(T a, T b, T c) {
+  switch(ThreadLocalRandom.current().nextInt(3)) {
+    case 0: return toArray(a, b);
+    case 1: return toArray(a, c);
+    case 2: return toArray(b, c);
+  }
+  throw new AssertionError(); // Can't get here
+}
+public static void main(String[] args) {
+  String[] attributes = pickTwo("Good", "Fast", "Cheap");  //  ClassCastException, because Object[] is not a subtype of String[].
+}
+```
+* `T...` allocates an array of type Object[], which is the most specific type that is guaranteed to hold these instances, no matter what types of objects are passed to pickTwo at the call site
+* or you can always just use `List<List<? extends T>> lists` instead of varargs in the parameter
+* always use `@SafeVarargs` on every method with a generic varargs parameter, so its users won't be burdened by confusing compiler warnings
 
 ## 6 Enums and Annotations
 
