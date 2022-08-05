@@ -10,6 +10,7 @@
     * [Item 30: Favor generic methods](#item-30-favor-generic-methods)
     * [Item 31: Use bounded wildcards to increase api flexibility](#item-31-use-bounded-wildcards-to-increase-api-flexibility)
     * [Item 32: Combine generics and varargs judiciously](#item-32-combine-generics-and-varargs-judiciously)
+    * [Item 33: Consider typesafe heterogeneous containers](#item-33-consider-typesafe-heterogeneous-container)
 * [6 Enums and Annotations](#6-enums-and-annotations)   
     * [Item 34: Use Enums instead of int constants](#item-34-use-enums-instead-of-int-constants)  
     * [Item 35: Use instance fields instead of ordinals](#item-35-use-instance-fields-instead-of-ordinals)  
@@ -211,8 +212,7 @@ public static void swap(List<?> list, int i, int j);
 * with generic, you cannot do this:
 ```java
         List<Object> c = new ArrayList<>();
-        List<String> d = new ArrayList<>();
-        c = d;
+        List<String> d = c;
 ```
 * but with array, you can do this:
 ```java
@@ -231,7 +231,7 @@ static void dangerous(List<String>... stringLists) {
 }
 ```
 * this demonstrate it is unsafe to store a value in a generic varargs array parameter
-* the reason it is legal to declare a method with a generic varargs parameter but illegal to create a generic array explicitly
+* it is legal to declare a method with a generic varargs parameter but illegal to create a generic array explicitly
 * if a method with varargs parameters is invoked, you will get a [warning](https://stackoverflow.com/q/12462079/5777189)
     * this force users of this method to do `@SuppressWarnings("unchecked")` at every call site
     * after Java 7, you can add a `@SafeVarargs` to remove the warning
@@ -260,6 +260,43 @@ public static void main(String[] args) {
 * `T...` allocates an array of type Object[], which is the most specific type that is guaranteed to hold these instances, no matter what types of objects are passed to pickTwo at the call site
 * or you can always just use `List<List<? extends T>> lists` instead of varargs in the parameter
 * always use `@SafeVarargs` on every method with a generic varargs parameter, so its users won't be burdened by confusing compiler warnings
+
+### Item 33 Consider typesafe heterogeneous container
+* usually you can one put a single type of parameter into a container, like you can only put String into `List<String>`
+* but if you need to support putting an unknown number of types into a container, you can use this approach:
+```java
+// Typesafe heterogeneous container pattern - implementation
+public class Favorites {
+  private Map<Class<?>, Object> favorites = new HashMap<>();
+
+  public <T> void putFavorite(Class<T> type, T instance) {
+    favorites.put(Objects.requireNonNull(type), instance);
+  }
+
+  public <T> T getFavorite(Class<T> type) {
+    return type.cast(favorites.get(type));
+  }
+}
+```
+* a legitimate use case is you want a container class for arbitrarily many columns of a database row
+* notice in the put method the parameter is not simply `Class` but `Class<T>`, this class literal is call a type token
+* it is typesafe: it will never return an Integer when you ask it for a String
+* it is also heterogeneous: unlike an ordinary map, all the keys are of different types
+* there are 2 limitations to this approach:
+    * a malicious client could corrupt the type safety by passing in a raw Class object
+    * but this could be easily fix by adding a dynamic cast in the put method
+```java
+// Achieving runtime type safety with a dynamic cast
+public <T> void putFavorite(Class<T> type, T instance) {
+    favorites.put(type, type.cast(instance));
+}
+```
+* second limitation: it canot be used on non-refitiable type such as `List<String>`
+    * `List<String>.class` is a syntax error
+    * `List<String>` and `List<Integer>` are both `List.class`. 
+    * if `List<String>.class` and `List<Integer>.class` were legal and returned the same object reference it would be bad
+* you can limit the types that can be passed to this container by using bounded type token
+* there is a useful method from `Class` call `asSubclass` that let you cast a `Class<?>` into `Class<? extends Annotation>`, no compiler warning 
 
 ## 6 Enums and Annotations
 
