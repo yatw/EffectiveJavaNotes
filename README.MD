@@ -2,6 +2,8 @@
 
 
 ## Table of Contents
+* [4 Classes and Interfaces](#4-classes-and-interfaces)   
+    * [Item 15: Minimize the accessibility of classes and members](#item-15-minimize-the-accessibility-of-classes-and-members)  
 * [5 Generics](#5-generics)   
     * [Item 26: Don't use raw type](#item-26-dont-use-raw-type)  
     * [Item 27: Eliminate unchecked warnings](#item-27-eliminate-unchecked-warnings)  
@@ -71,6 +73,49 @@
 * [12 Serialization](#12-serialization)   
     * [Item 85: Prefer alternatives to Java serialization](#item-85-prefer-alternatives-to-java-serialization)
     * [Item 86: Implement Serializable with great caution](#item-86-implement-serializable-with-great-caution)
+
+## 4 Classes and Interfaces
+
+### Item 15 Minimize the accessibility of classes and members
+* encapsulation is to hide a component's implementation details from other components
+    * decouples the components from a system to be developed, tested in isolation
+    * increase software reuse
+* make each class or member as inaccessible as possible
+* for top-level (non-nested) classes and interfaces, there are only package-private (default) and public access levels
+* if a top-level class can be made package-private, it should be
+    * by making this class part of the package's implementation rather than an exported API, we can modify, replace, or remove without worry about compatibility
+* if a top-level class is only used by one class, consider making the top-level class a private static nested class of the class using it
+* the four possible acess levels:
+    * private
+    * package-private (default)
+    * protected
+    * public
+* a protected member is part of the class's exported API and must be supported forever
+* both private and package-private members are part of a class's implementation and do not normally exported as API
+    * but they can be leak if the class implements Serializable
+* if a method overrides a superclass method, it cannot have a more restrictive access level in the subclass than in the superclass
+* all methods from an interface must be declared public
+* it is acceptable to make a private member of a public class package-private in order to test it, but not acceptable to raise the accessibility any higher
+* instance fields of a public class should rarely be public
+    * give up the ability to take any action when the field is modified
+    * not thread-safe
+    * even if the field is final and refers to an immutable object, making it public means you give up the flexibility to switch to a new internal data represtation in which the field doesn't exist
+    * while the reference cannot be modified, the referenced object can still be modified
+* nonzero-length array is always mutable, so it is wrong for a class to have a public static final array field, or an accessor that reutns it
+```java
+// Potential security hole!
+public static final Thing[] VALUES = { ... };
+// fix: either store into a public immutable list
+private static final Thing[] PRIVATE_VALUES = { ... };
+public static final List<Thing> VALUES = Collections.unmodifiableList(Arrays.asList(PRIVATE_VALUES));
+// or clone a copy of the array
+private static final Thing[] PRIVATE_VALUES = { ... };
+public static final Thing[] values() {
+    return PRIVATE_VALUES.clone();
+}
+```    
+
+
 
 ## 5 Generics
 
