@@ -4,6 +4,7 @@
 ## Table of Contents
 * [4 Classes and Interfaces](#4-classes-and-interfaces)   
     * [Item 15: Minimize the accessibility of classes and members](#item-15-minimize-the-accessibility-of-classes-and-members)  
+    * [Item 16: In public classes, use accessor methods, not public fields](#item-16-in-public-classes-use-accessor-methods-not-public-fields)
 * [5 Generics](#5-generics)   
     * [Item 26: Don't use raw type](#item-26-dont-use-raw-type)  
     * [Item 27: Eliminate unchecked warnings](#item-27-eliminate-unchecked-warnings)  
@@ -85,7 +86,7 @@
 * if a top-level class can be made package-private, it should be
     * by making this class part of the package's implementation rather than an exported API, we can modify, replace, or remove without worry about compatibility
 * if a top-level class is only used by one class, consider making the top-level class a private static nested class of the class using it
-* the four possible acess levels:
+* the four possible access levels:
     * private
     * package-private (default)
     * protected
@@ -114,7 +115,20 @@ public static final Thing[] values() {
     return PRIVATE_VALUES.clone();
 }
 ```    
-
+### Item 16 In public classes, use accessor methods, not public fields
+* often we have classes that serve no purpose other than to group instance fields
+```java
+class Point {
+  public double x;
+  public double y;
+}
+```
+* because the data fields are public, you cannot change the fields without changing the code using it
+* if these kind of classes are package private or private nested class, there is nothing wrong with exposing its data fields
+    * less clutter without the getter setter fields
+    * any changes to this class is confined to the package
+* now for public classes, it is never a good idea to expose the fields publicly
+   
 
 
 ## 5 Generics
