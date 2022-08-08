@@ -5,6 +5,7 @@
 * [4 Classes and Interfaces](#4-classes-and-interfaces)   
     * [Item 15: Minimize the accessibility of classes and members](#item-15-minimize-the-accessibility-of-classes-and-members)  
     * [Item 16: In public classes, use accessor methods, not public fields](#item-16-in-public-classes-use-accessor-methods-not-public-fields)
+    * [Item 17: Minimize mutability](#item-17-minimize-mutability)
 * [5 Generics](#5-generics)   
     * [Item 26: Don't use raw type](#item-26-dont-use-raw-type)  
     * [Item 27: Eliminate unchecked warnings](#item-27-eliminate-unchecked-warnings)  
@@ -125,11 +126,47 @@ class Point {
 ```
 * because the data fields are public, you cannot change the fields without changing the code using it
 * if these kind of classes are package private or private nested class, there is nothing wrong with exposing its data fields
-    * less clutter without the getter setter fields
+    * less clutter without the getter setter methods
     * any changes to this class is confined to the package
-* now for public classes, it is never a good idea to expose the fields publicly
+* for public classes, it is never a good idea to expose the fields publicly
    
-
+### Item 17 Minimize mutability
+* immutable class is simply a class whose instances cannot be modified, and all information in each instance is fixed for the lifetime of that object
+* below is a list of immutable objects' benefit:
+    * they are simple; the class property (invariant) during object creation will always be maintained
+    * they are thread-safe; require no synchronization (easiest approach to achieve thread safety)
+    * they can be shared freely, encourage clients to reuse existing instances wherever possible
+    ```java
+     // constant objects can just be reuse
+      public static final Complex ZERO = new Complex(0, 0);
+      public static final Complex ONE = new Complex(1, 0);
+      public static final Complex I = new Complex(0, 1);
+    ```
+  * since immutable objects can be shared freely, we never have to make defensive copies because the copies would be forever equivalent to the originals
+  * therefore, we need not or should not provide a clone method or copy constructor on an immutable class
+  * we can also share immutable object's internal to another immutable object (for example, `BigInteger` negate() method)
+  * they are great map keys and set elements because we don't have to worry about their values changing and changed their hashcode invariants
+* the disadvantage of immutable objects is they require a separate object for each distant value
+    * for example to update a bit in the `BigInteger`, this operation requires time and space proportional to the size of the `BigInteger`
+    * the performance problem is magnified if you perform a multistep operation that generates a new object at every step, and only keep the final result object
+    * there are solutions to this:
+        * provide primitive instead of immutable object for the common multistep operations
+        * provide a package-private or public mutable companion class (example: StringBuilder for String)
+* rules to make a class immutable:
+* 1. Don't provide methods that modify the object's state (known as mutators)
+    * this is stronger than necessary; some immutable classes have nonfinal fields in which they cache the results of expensive computations
+* 2. Ensure that the class can't be extended
+    * make the class final or make the constructors private or package-private and use public static factories
+    * this allow the class to still be subclass-able in the pckage but un-extendable for classes outside of the package
+* 3. Make all fields final
+* 4. Make all fields private
+* 5. Ensure exclusive access to any mutable component
+    * do not just expose the mutable fields' reference to clients
+    * do not initialize such field from client-provided object
+    * make defensive copies in constructors, accessors, and readObject methods for serializable   
+* classes should be immutable unless there's a very good reason to make them mutable; limit its mutability as much as possible
+* declare every field private final unless there's a good reason not to
+* constructors should create fully initialized objects with all of their invariants established    
 
 ## 5 Generics
 
