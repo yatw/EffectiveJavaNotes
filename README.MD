@@ -6,6 +6,7 @@
     * [Item 15: Minimize the accessibility of classes and members](#item-15-minimize-the-accessibility-of-classes-and-members)  
     * [Item 16: In public classes, use accessor methods, not public fields](#item-16-in-public-classes-use-accessor-methods-not-public-fields)
     * [Item 17: Minimize mutability](#item-17-minimize-mutability)
+    * [Item 18: Favor composition over inheritance](#item-18-favor-composition-over-inheritance)
 * [5 Generics](#5-generics)   
     * [Item 26: Don't use raw type](#item-26-dont-use-raw-type)  
     * [Item 27: Eliminate unchecked warnings](#item-27-eliminate-unchecked-warnings)  
@@ -167,6 +168,23 @@ class Point {
 * classes should be immutable unless there's a very good reason to make them mutable; limit its mutability as much as possible
 * declare every field private final unless there's a good reason not to
 * constructors should create fully initialized objects with all of their invariants established    
+
+### Item 18 Favor composition over inheritance
+* inheritance violates encapsulation ([61B example](https://www.youtube.com/watch?v=EfxYiAN6YME&list=PL8FaHk7qbOD6Mi8gDriGGeSnHi68QLuVD&index=6))
+* a class can have method that invoke another method in the same class. If you extend this class and override one of the method, now the parent class will be invoking the method you override instead
+* this means a subclass depends on the implementation details of its superclass for its proper function
+* adjusting to the superclass to make the subclass work would depend on the superclass's implementation details, and that is subject to change from release to release
+* reimplementing superclass methods is difficult, time-consuming, error-prone, and may reduce performance
+* not always possible because some methods cannot be implemented without access to private fields inaccessible to the subclass
+* if you override every method from superclass to ensure some condition to be true, this works until a new method is added to the superclass that break your condition
+* extending a class merely to add new method (no overrideing any method) is much safer, but nothing is preventing the superclass to add a new method with the same name of your method (now you overriding again)
+* prevent class from outside your package to extend your class, a malicious client can corrupt the invariants of the superclass
+* if there are any flaws in the superclass, extending it propagates these flaws in the system, where composition can hide them
+* The solution to all of above is to give your new class a private field that references the class you plan to extend (call composition)
+* have a forwarding class that hold the class you plan to extend, with methods to interface with that class. A separate class extends the forwarding class with your desired functionality (see example page 90)
+* composition is flexible in that it can holds a interface as private field, where inheritance can only extend one concrete class
+* the drawback of composition is it is not suited for callback, performance is usually not an issue
+* a class B should extend a class A only if there is an "is-a" relationship between the two classes
 
 ## 5 Generics
 
