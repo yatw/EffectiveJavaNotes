@@ -7,6 +7,7 @@
     * [Item 16: In public classes, use accessor methods, not public fields](#item-16-in-public-classes-use-accessor-methods-not-public-fields)
     * [Item 17: Minimize mutability](#item-17-minimize-mutability)
     * [Item 18: Favor composition over inheritance](#item-18-favor-composition-over-inheritance)
+    * [Item 19: Design and document for inheritance or else prohibit it](#item-19-design-and-document-for-inheritance-or-else-prohibit-it)
 * [5 Generics](#5-generics)   
     * [Item 26: Don't use raw type](#item-26-dont-use-raw-type)  
     * [Item 27: Eliminate unchecked warnings](#item-27-eliminate-unchecked-warnings)  
@@ -133,27 +134,28 @@ class Point {
    
 ### Item 17 Minimize mutability
 * immutable class is simply a class whose instances cannot be modified, and all information in each instance is fixed for the lifetime of that object
-* below is a list of immutable objects' benefit:
-    * they are simple; the class property (invariant) during object creation will always be maintained
-    * they are thread-safe; require no synchronization (easiest approach to achieve thread safety)
-    * they can be shared freely, encourage clients to reuse existing instances wherever possible
-    ```java
-     // constant objects can just be reuse
-      public static final Complex ZERO = new Complex(0, 0);
-      public static final Complex ONE = new Complex(1, 0);
-      public static final Complex I = new Complex(0, 1);
-    ```
-  * since immutable objects can be shared freely, we never have to make defensive copies because the copies would be forever equivalent to the originals
-  * therefore, we need not or should not provide a clone method or copy constructor on an immutable class
-  * we can also share immutable object's internal to another immutable object (for example, `BigInteger` negate() method)
-  * they are great map keys and set elements because we don't have to worry about their values changing and changed their hashcode invariants
-* the disadvantage of immutable objects is they require a separate object for each distant value
-    * for example to update a bit in the `BigInteger`, this operation requires time and space proportional to the size of the `BigInteger`
-    * the performance problem is magnified if you perform a multistep operation that generates a new object at every step, and only keep the final result object
-    * there are solutions to this:
-        * provide primitive instead of immutable object for the common multistep operations
-        * provide a package-private or public mutable companion class (example: StringBuilder for String)
-* rules to make a class immutable:
+#### immutable objects' benefit:
+* they are simple; the class property (invariant) during object creation will always be maintained
+* they are thread-safe; require no synchronization (easiest approach to achieve thread safety)
+* they can be shared freely, encourage clients to reuse existing instances wherever possible
+```java
+ // constant objects can just be reuse
+  public static final Complex ZERO = new Complex(0, 0);
+  public static final Complex ONE = new Complex(1, 0);
+  public static final Complex I = new Complex(0, 1);
+```
+* since immutable objects can be shared freely, we never have to make defensive copies because the copies would be forever equivalent to the originals
+* therefore, we need not or should not provide a clone method or copy constructor on an immutable class
+* we can also share immutable object's internal to another immutable object (for example, `BigInteger` negate() method)
+* they are great map keys and set elements because we don't have to worry about their values changing and changed their hashcode invariants
+#### disadvantage  
+* require a separate object for each distant value
+* for example to update a bit in the `BigInteger`, this operation requires time and space proportional to the size of the `BigInteger`
+* the performance problem is magnified if you perform a multistep operation that generates a new object at every step, and only keep the final result object
+* there are solutions to this:
+    * provide primitive instead of immutable object for the common multistep operations
+    * provide a package-private or public mutable companion class (example: StringBuilder for String)
+#### rules to make a class immutable:
 * 1. Don't provide methods that modify the object's state (known as mutators)
     * this is stronger than necessary; some immutable classes have nonfinal fields in which they cache the results of expensive computations
 * 2. Ensure that the class can't be extended
@@ -172,20 +174,43 @@ class Point {
 ### Item 18 Favor composition over inheritance
 * inheritance violates encapsulation ([61B example](https://www.youtube.com/watch?v=EfxYiAN6YME&list=PL8FaHk7qbOD6Mi8gDriGGeSnHi68QLuVD&index=6))
 * a class can have method that invoke another method in the same class. If you extend this class and override one of the method, now the parent class will be invoking the method you override instead
+#### Problem
 * this means a subclass depends on the implementation details of its superclass for its proper function
 * adjusting to the superclass to make the subclass work would depend on the superclass's implementation details, and that is subject to change from release to release
 * reimplementing superclass methods is difficult, time-consuming, error-prone, and may reduce performance
 * not always possible because some methods cannot be implemented without access to private fields inaccessible to the subclass
 * if you override every method from superclass to ensure some condition to be true, this works until a new method is added to the superclass that break your condition
-* extending a class merely to add new method (no overrideing any method) is much safer, but nothing is preventing the superclass to add a new method with the same name of your method (now you overriding again)
-* prevent class from outside your package to extend your class, a malicious client can corrupt the invariants of the superclass
+* extending a class merely to add new method (no overriding any method) is much safer, but nothing prevent the superclass to add a new method with the same name of your method (now you overriding again)
 * if there are any flaws in the superclass, extending it propagates these flaws in the system, where composition can hide them
+#### Solution
 * The solution to all of above is to give your new class a private field that references the class you plan to extend (call composition)
 * have a forwarding class that hold the class you plan to extend, with methods to interface with that class. A separate class extends the forwarding class with your desired functionality (see example page 90)
 * composition is flexible in that it can holds a interface as private field, where inheritance can only extend one concrete class
 * the drawback of composition is it is not suited for callback, performance is usually not an issue
+* prevent class from outside your package to extend your class, a malicious client can corrupt the invariants of the superclass
 * a class B should extend a class A only if there is an "is-a" relationship between the two classes
 
+
+### Item 19 Design and document for inheritance or else prohibit it
+* for a class to support inheritance:
+    * for each public or protected method, the documentation must indicate which overridable methods the method invokes
+    * this is an unfortunate consequence that this kind of documentation will violate the good pratice of describing what a given method does and now how it does it, 
+* the only way to test a class designed for inheritance is to write subclasses and see what methods are used or not used
+* when you design for inheritance a class that is likely to achieve wide use, realize that you are committing forever to the self-use patterns that you documented
+* constructors must not invoke overridable methods, directly or indirectly
+    * superclass constructor runs before the subclass constructor, so the overrided method in the subclass will get invoked before the subclass constructor has run
+    * this usually throw a `NullPointerException`
+    * it is safe to invoke private methods, final methods, and static methods as none of them are overridable
+    * you can also move the body of the overridable method to a private helper method and call that method instead; the overridable method can also call that helper method   
+* `Cloneable` and `Serializable` in a class behavior like constructors, so neither clone nor readObject may invoke an overridable method, directly or indirectly
+    * in the case of `readObject`, the overriding method will run before the subclass's state has been deserialized
+    * in the case of `clone`, the overriding method will run before the subclass's clone method has a chance to fix the clone's state
+* prohibit subclassing in classes that are not designed and documented to be safely subclassed
+    * either declare the class final
+    * or make all constructors private or package-private and to use public static factories; this allow the class to still be subclass-able within the package
+    * don't feel bad about prohibiting subclassing, the composition strategy from previous item is better approach
+* if you have access to everything in a project and you can change anything at any time (you are not shipping public releases), then this item doesn't matter too much
+          
 ## 5 Generics
 
 ### Item 26 Don't use raw type
