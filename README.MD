@@ -8,6 +8,7 @@
     * [Item 17: Minimize mutability](#item-17-minimize-mutability)
     * [Item 18: Favor composition over inheritance](#item-18-favor-composition-over-inheritance)
     * [Item 19: Design and document for inheritance or else prohibit it](#item-19-design-and-document-for-inheritance-or-else-prohibit-it)
+    * [Item 20: Prefer interfaces to abstract classes](#item-20-prefer-interfaces-to-abstract-classes)    
 * [5 Generics](#5-generics)   
     * [Item 26: Don't use raw type](#item-26-dont-use-raw-type)  
     * [Item 27: Eliminate unchecked warnings](#item-27-eliminate-unchecked-warnings)  
@@ -210,7 +211,25 @@ class Point {
     * or make all constructors private or package-private and to use public static factories; this allow the class to still be subclass-able within the package
     * don't feel bad about prohibiting subclassing, the composition strategy from previous item is better approach
 * if you have access to everything in a project and you can change anything at any time (you are not shipping public releases), then this item doesn't matter too much
-          
+
+### Item 20 Prefer interfaces to abstract classes
+* you can only extend one class, but you can implement as many interface as you like in Java
+* an existing class can easily be retrofitted to implement a new interface, but not extend more classes
+* interface do not force you to put a class on top of another class in the type hierarchies
+* inheritance also subject you to break encapsulation
+#### Interface limitation
+* cannot provide default methods for Object methods such as [equals and hashCode](https://stackoverflow.com/q/24016962/5777189)
+* cannot contain instance fields or nonpublic static members
+#### Abstract skeletal implementation
+* we can combine the advantages of interfaces and abstract classes 
+* have an interface to define the type and providing some default methods, and the skeletal implementation class will implement the interface and provide interface methods
+* now you can extend this skeletal implementation class instead
+#### benefit
+* you can still use the interface as type
+* it is optional to extend this skeletal implementation class, other classes can still implement the interface directly if they prefer
+* the skeletal implementation class can provide default methods for Object methods such as equals and hashCode
+* you can create an abstract version or a simple version; a simple implementation is the simplest possible working implemenation that you can use as it or subclass to customize
+* skeletal implementation class also need to design and document for inheritance
 ## 5 Generics
 
 ### Item 26 Don't use raw type
