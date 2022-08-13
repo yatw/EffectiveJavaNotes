@@ -9,6 +9,8 @@
     * [Item 18: Favor composition over inheritance](#item-18-favor-composition-over-inheritance)
     * [Item 19: Design and document for inheritance or else prohibit it](#item-19-design-and-document-for-inheritance-or-else-prohibit-it)
     * [Item 20: Prefer interfaces to abstract classes](#item-20-prefer-interfaces-to-abstract-classes)    
+    * [Item 21: Design interfaces for posterity](#item-21-design-interfaces-for-posterity)    
+    * [Item 22: Use interfaces only to define types](#item-22-use-interfaces-only-to-define-types)    
 * [5 Generics](#5-generics)   
     * [Item 26: Don't use raw type](#item-26-dont-use-raw-type)  
     * [Item 27: Eliminate unchecked warnings](#item-27-eliminate-unchecked-warnings)  
@@ -230,6 +232,40 @@ class Point {
 * the skeletal implementation class can provide default methods for Object methods such as equals and hashCode
 * you can create an abstract version or a simple version; a simple implementation is the simplest possible working implemenation that you can use as it or subclass to customize
 * skeletal implementation class also need to design and document for inheritance
+
+### Item 21 Design interfaces for posterity
+* when you add a new method to an interface, any existing implementation would break because now they don't have implementation for the new method
+* default methods in interfaces evolve an interface without requiring the consumer of the service to implement that method right away
+* default methods can violate constraints (invariants) of some classes
+    * for example Apache's `synchronizedCollection` is no longer synchronized if a client directly call the `removeIf()` method from Collection interface
+* in the presence of default methods, existing implementations of an interface may compile without error or warning but fail at runtime
+* using default methods to add new methods to existing interfaces should be avoided unless the need is critical, in which case think if any existing interface implementations might break
+
+### Item 22 Use interfaces only to define types
+* use interface to serves as a type so a user can refer to a class by the interface type
+* do not use interface to group constants like below
+```java
+// Constant interface antipattern - do not use!
+public interface PhysicalConstants {
+    // Avogadro's number (1/mol)
+    static final double AVOGADROS_NUMBER = 6.022_140_857e23;
+
+    // Boltzmann constant (J/K)
+    static final double BOLTZMANN_CONSTANT = 1.380_648_52e-23;
+
+    // Mass of the electron (kg)
+    static final double ELECTRON_MASS = 9.109_383_56e-31;
+}
+```
+#### Problem
+* the constants used by a class are implementation details and should be be leak into the class's exported API
+* this interface type is no use to any user and confuse them
+* it represents a commitment and removing this interface in the future might break existing implementation
+#### Solution
+* if these constants are specific to the class, just make them member field, like `Integer.MAX_VALUE`
+* export these constants in a enum 
+* use a normal noninstantiable utility class
+
 ## 5 Generics
 
 ### Item 26 Don't use raw type
