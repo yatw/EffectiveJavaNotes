@@ -10,7 +10,10 @@
     * [Item 19: Design and document for inheritance or else prohibit it](#item-19-design-and-document-for-inheritance-or-else-prohibit-it)
     * [Item 20: Prefer interfaces to abstract classes](#item-20-prefer-interfaces-to-abstract-classes)    
     * [Item 21: Design interfaces for posterity](#item-21-design-interfaces-for-posterity)    
-    * [Item 22: Use interfaces only to define types](#item-22-use-interfaces-only-to-define-types)    
+    * [Item 22: Use interfaces only to define types](#item-22-use-interfaces-only-to-define-types)   
+    * [Item 23: Prefer class hierarchies to tagged classes](#item-23-prefer-class-hierarchies-to-tagged-classes)    
+    * [Item 24: Favor static member classes over nonstatic](#item-24-favor-static-member-classes-over-nonstatic)    
+    * [Item 25: Limit source files to a single top-level class](#item-25-limit-source-files-to-a-single-top-level-class)    
 * [5 Generics](#5-generics)   
     * [Item 26: Don't use raw type](#item-26-dont-use-raw-type)  
     * [Item 27: Eliminate unchecked warnings](#item-27-eliminate-unchecked-warnings)  
@@ -265,6 +268,79 @@ public interface PhysicalConstants {
 * if these constants are specific to the class, just make them member field, like `Integer.MAX_VALUE`
 * export these constants in a enum 
 * use a normal noninstantiable utility class
+
+### Item 23 Prefer class hierarchies to tagged classes
+* do not write classes that use a field to tag which kind of flavor or type this instance is
+* for example below is a class to support both RECTANGLE and CIRCLE
+```java
+// Tagged class - vastly inferior to a class hierarchy!
+class Figure {
+    enum Shape {RECTANGLE, CIRCLE};
+
+    // Tag field - the shape of this figure
+    final Shape shape;
+
+    // These fields are used only if shape is RECTANGLE
+    double length;
+
+    double width;
+
+    // This field is used only if shape is CIRCLE
+    double radius;
+
+    // Constructor for circle
+    Figure(double radius) {
+        shape = Shape.CIRCLE;
+        this.radius = radius;
+    }
+
+    // Constructor for rectangle
+    Figure(double length, double width) {
+        shape = Shape.RECTANGLE;
+        this.length = length;
+        this.width = width;
+    }
+
+    double area() {
+        switch (shape) {
+            case RECTANGLE:
+                return length * width;
+            case CIRCLE:
+                return Math.PI * (radius * radius);
+            default:
+                throw new AssertionError(shape);
+        }
+    }
+}
+```
+#### Problem
+* cluttered with enum declarations, tag fields, switch statements, and fields that are meaningless to other types
+* readability is harmed because jumbled multiple implementations into a single class
+* memory footprint increased because instances are burdened with irrelevant fields belonging to other types
+* constructors must set the tag field and initialize the right data fields with no help from the compiler
+* if you want to support a new type, you need to update all the switch statement and type check logic
+* if you want to support a new type, you must have come back to edit this class, where as inheritance you can inherit an existing subclass
+#### Solution
+* break a tagged class into proper class hierarchy with abstract class and concrete subclass for each type
+
+### Item 24 Favor static member classes over nonstatic
+* There are four kinds of nested class in Java. 
+    * **static member classes**: declared as a static member of another class
+    * **nonstatic member classes**: declared as an instance member of another class
+    * **local classes**: declared inside an instance method of another class
+    * **anonymous classes**: like a local inner class, but written as an expression which returns a one-off object
+* if you make a static nested class nonstatic instead, each instance will have a hidden extraneous reference to its enclosing instance
+* this extraneous reference to time and space to store and can cause hard to detect memory leak
+* a quick rule is if you declare a member class that does not require access to the enclosing instance, always make it static
+* to understand the difference, I always come back to [this post](https://stackoverflow.com/a/70687/5777189)
+
+
+### Item 25 Limit source files to a single top-level class
+* there is no benefits to defining multiple top-level classes in a single source file
+* this just increase the risk of you accidentally make another source file and declare another class with the same name
+* what will happen is unpredictable behavior (might fail to compile, work as before, or use your new class), depends on the command you use and compiler etc
+* fix the problem by splitting the top-level classes into separate source files with names match the top-level class name
+* or make nested class
 
 ## 5 Generics
 
