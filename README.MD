@@ -2,6 +2,9 @@
 
 
 ## Table of Contents
+* [3 Methods Common to All Objects](#3-methods-common-to-all-objects)   
+    * [Item 10: Obey the general contract when overriding equals](#item-10-obey-the-general-contract-when-overriding-equals)  
+
 * [4 Classes and Interfaces](#4-classes-and-interfaces)   
     * [Item 15: Minimize the accessibility of classes and members](#item-15-minimize-the-accessibility-of-classes-and-members)  
     * [Item 16: In public classes, use accessor methods, not public fields](#item-16-in-public-classes-use-accessor-methods-not-public-fields)
@@ -83,6 +86,88 @@
 * [12 Serialization](#12-serialization)   
     * [Item 85: Prefer alternatives to Java serialization](#item-85-prefer-alternatives-to-java-serialization)
     * [Item 86: Implement Serializable with great caution](#item-86-implement-serializable-with-great-caution)
+    
+## 3 Methods Common to All Objects
+
+### Item 10 Obey the general contract when overriding equals
+
+#### Only override equals if you need to
+no override is needed if any of the condition apply:
+* each instance of the class is inherently unique (classes such as Thread that represent entites rather than values)
+* there is no need for the class to provide a "logical equality" test (`java.util.regex.Pattern` class do not expect any user to be checking regular expression)
+* a superclass has already overridden equals, and the superclass behavior is appropriate for this class (equals from `AbstractSet`, `AbstractList`, `AbstractMap`)
+* the class is private or package-private and you are certain that its equals method will never be invoked
+```java
+ // you can ensure that it isn't invoked accidentally
+ @Override
+ public boolean equals(Object o) {
+     throw new AssertionError(); // Method is never called
+ }
+``` 
+#### If you override the equals method, here is the contract
+* Reflexive: For any non-null reference value x, x.equals(x) must return true
+* Symmetric: For any non-null reference values x and y, x.equals(y) must return true if and only if y.equals(x) returns true
+* Transitive: For any non-null reference values x, y, z, if x.equals(y) returns true and y.equals(z) returns true, then x.equals(z) must return true
+* Consistent: For any non-null reference values x and y, multiple invocations of x.equals(y) must consistently return true or consistently return false, provided no information used in equals comparisons is modified
+* For any non-null reference value x, x.equals(null) must return false.
+
+#### Symmetric
+* symmetric can be broken when you compare a class with its subclass  
+
+The example given in the book is `CaseInsensitiveString`, while CaseInsensitiveString knows about ordinary strings, strings doesn't know about CaseInsensitiveString
+```java
+CaseInsensitiveString cis = new CaseInsensitiveString("Polish");
+String s = "polish";
+```
+* while `cis.equals(s)` returns true,  `s.equals(cis)` returns false.   
+* The problem is if you have a `List<CaseInsensitiveString>`, and you do `list.contains("string")` no one knows what will happen
+
+#### Transitivity
+* transitivity can also be broken when you compare a class with its subclass  
+The example given in the book is `Point` and `ColorPoint` (colorPoint extends Point)   
+Happen when you make `ColorPoint`'s equals() flexible and compare only x,y when you see a point, and compare x,y and color when you see a `ColorPoint`  
+```java
+ColorPoint p1 = new ColorPoint(1, 2, Color.RED);
+Point p2 = new Point(1, 2);
+ColorPoint p3 = new ColorPoint(1, 2, Color.BLUE);
+```
+* **this is a fundamental problem of equivalence relations in object-oriented languages, there is no solution** 
+* it is still justified to compare the subclass, `ColorPoint` still need to be able to behavior like a `Point`, especially if we plan to put `ColorPoint` into a collection of `Point`
+
+#### Consistency
+* if two objects are equal, they must remain equal for all time unless one of them is modified
+* think about if the object can be immutable
+* do not write an equals method that depends on unreliable resources
+
+#### Non-nullity
+* there is no need to do a null check specifically, the `instanceOf` returns false if object is null
+```java
+@Override
+public boolean equals(Object o) {
+    if (!(o instanceof MyType))
+        return false;
+    MyType mt = (MyType) o;
+    ...
+}
+```
+
+#### Steps to implement equals()
+1. use the == operator to check if the argument is a reference to this object
+2. use `instanceof` to check if the argument has the correct type
+3. cast the argument to the correct type
+4. For each “significant” field in the class, check if that field of the argument matches the corresponding field of this object. If all these tests succeed, return true; otherwise, return false
+
+#### field comparision
+* for primitive fields whose type is not float or double, use the == operator for comparisons
+* for object reference fields, call the equals method recursively
+* for float fields, use the static `Float.compare(float,float)` method
+* for double fields, use `Double.compare(double, double)`
+* the special treatment of float and double fields is made necessary by the existence of Float.NaN, -0.0f and the analogous double values
+* `Float.equals` and `Double.equals` would do autoboxing for every comparision and have poor performance
+* for array, use `Arrays.equals`
+* to improve performance, first compare the fields that are more likely to differ, or less expensive to compare
+* or compare derived fields, for example if the area of `Polygon` is different there is no need to check the edges and vertices
+* lastly remember the parameter of `equals()` is `object`, otherwise you are overloading not overriding (Item 40)
 
 ## 4 Classes and Interfaces
 
