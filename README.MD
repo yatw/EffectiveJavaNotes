@@ -4,7 +4,7 @@
 ## Table of Contents
 * [3 Methods Common to All Objects](#3-methods-common-to-all-objects)   
     * [Item 10: Obey the general contract when overriding equals](#item-10-obey-the-general-contract-when-overriding-equals)  
-
+    * [Item 11: Always override hashCode when you override equals](#item-11-always-override-hashcode-when-you-override-equals)  
 * [4 Classes and Interfaces](#4-classes-and-interfaces)   
     * [Item 15: Minimize the accessibility of classes and members](#item-15-minimize-the-accessibility-of-classes-and-members)  
     * [Item 16: In public classes, use accessor methods, not public fields](#item-16-in-public-classes-use-accessor-methods-not-public-fields)
@@ -123,7 +123,7 @@ String s = "polish";
 * The problem is if you have a `List<CaseInsensitiveString>`, and you do `list.contains("string")` no one knows what will happen
 
 #### Transitivity
-* transitivity can also be broken when you compare a class with its subclass  
+* transitivity can also be broken when you compare a class with its subclass   
 The example given in the book is `Point` and `ColorPoint` (colorPoint extends Point)   
 Happen when you make `ColorPoint`'s equals() flexible and compare only x,y when you see a point, and compare x,y and color when you see a `ColorPoint`  
 ```java
@@ -131,6 +131,7 @@ ColorPoint p1 = new ColorPoint(1, 2, Color.RED);
 Point p2 = new Point(1, 2);
 ColorPoint p3 = new ColorPoint(1, 2, Color.BLUE);
 ```
+* now p1 equals p2, p2 equals p3, but p1 does not equals p3
 * **this is a fundamental problem of equivalence relations in object-oriented languages, there is no solution** 
 * it is still justified to compare the subclass, `ColorPoint` still need to be able to behavior like a `Point`, especially if we plan to put `ColorPoint` into a collection of `Point`
 
@@ -166,8 +167,26 @@ public boolean equals(Object o) {
 * `Float.equals` and `Double.equals` would do autoboxing for every comparision and have poor performance
 * for array, use `Arrays.equals`
 * to improve performance, first compare the fields that are more likely to differ, or less expensive to compare
-* or compare derived fields, for example if the area of `Polygon` is different there is no need to check the edges and vertices
+* or compare derived fields, for example if the area of `Polygon` is different then there is no need to check the edges and vertices
 * lastly remember the parameter of `equals()` is `object`, otherwise you are overloading not overriding (Item 40)
+
+
+### Item 11 Always override hashCode when you override equals
+* hashcode is crucial for object to function properly in collections such as Hashmap and HashSet
+
+#### HashCode Contract
+* consistency: when the hashCode method is invoked on an object repeatedly and nothing in equals is changed, it must consistently return the same value
+* if two objects are equal according to the equals method, then hashCode on the two objects must be the same
+* if two objects are unequal according to the equals method, it is **not** a requirement for hashCode to be different (but a good hash function tends to produce unequal hashcodes for unequal instances)
+
+---
+* a poor hashCode that always return the same number for every instance will hash everything to the same bucket, reduce performance to to linear time instead of quadratic time
+* we usually multiple by an odd prime number to a signficant field to produce the hashcode (see book page 51)
+* you can also use `Objects.hash()` method that takes an arbitrary number of objects and compute the hashcode for you, downside is it runs more slowly
+* can also consider storing or lazily initialize the hashcode during object creation if it is expensive to calculate
+* do not exclude significant fields from the hash code computation to improve performance; if there are large collection of instances who differ only at the regions you've chosen to ignore, the performance suffer
+* don't provide detailed specification for the value returned by hashCode, so clients can't reasonably depend on it; this gives you the flexibility to change it
+
 
 ## 4 Classes and Interfaces
 
