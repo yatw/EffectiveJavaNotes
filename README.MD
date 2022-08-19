@@ -5,6 +5,7 @@
 * [3 Methods Common to All Objects](#3-methods-common-to-all-objects)   
     * [Item 10: Obey the general contract when overriding equals](#item-10-obey-the-general-contract-when-overriding-equals)  
     * [Item 11: Always override hashCode when you override equals](#item-11-always-override-hashcode-when-you-override-equals)  
+    * [Item 12: Always override toString](#item-12-always-override-tostring)  
 * [4 Classes and Interfaces](#4-classes-and-interfaces)   
     * [Item 15: Minimize the accessibility of classes and members](#item-15-minimize-the-accessibility-of-classes-and-members)  
     * [Item 16: In public classes, use accessor methods, not public fields](#item-16-in-public-classes-use-accessor-methods-not-public-fields)
@@ -186,6 +187,25 @@ public boolean equals(Object o) {
 * can also consider storing or lazily initialize the hashcode during object creation if it is expensive to calculate
 * do not exclude significant fields from the hash code computation to improve performance; if there are large collection of instances who differ only at the regions you've chosen to ignore, the performance suffer
 * don't provide detailed specification for the value returned by hashCode, so clients can't reasonably depend on it; this gives you the flexibility to change it
+
+### Item 12 Always override toString
+* the default `Object.toString()` print the unsigned hexadecimal representation of the hash code, which isn't too useful
+* toString method is automatically invoked when an object is passed to println, printf, the string concatenation operator, or assert, or is printed by debugger
+* the benefit of a informative toString method extend beyond instances of the class to objects containing references to these instances, especially in collections
+* when practical, the toString method should return all of the interesting information contained in the object
+```java
+// you don't ever wanna see this:
+// Assertion failure: expected {abc, 123}, but was {abc, 123}.
+```
+#### think whether to specify the format of the return value in the documentation
+* if you do, it can serves as a standard format to use in parsing the object into some CSV for example
+* also provide corresponding matching factory or from string constructor for user to easily translate between the object and its string representation
+* disadvantage is once you specified a format, it is hard to make change in future if many client code depend on it
+* if you don't specify a format, you preserve the flexibility to add information or improve the format in later release
+---
+* always provide programmatic access to the information contained in the value returned by toString: provide accessor method instead of forcing your user to parse your toString
+* it makes no sense to write toString method in a static utility class, for enum types the default one is perfectly good
+* you should write a toString method in any abstract class whose subclasses share a common string representation (most collection classes work like this)
 
 
 ## 4 Classes and Interfaces
