@@ -6,6 +6,7 @@
     * [Item 10: Obey the general contract when overriding equals](#item-10-obey-the-general-contract-when-overriding-equals)  
     * [Item 11: Always override hashCode when you override equals](#item-11-always-override-hashcode-when-you-override-equals)  
     * [Item 12: Always override toString](#item-12-always-override-tostring)  
+    * [Item 13: Override clone judiciously](#item-13-override-clone-judiciously)
 * [4 Classes and Interfaces](#4-classes-and-interfaces)   
     * [Item 15: Minimize the accessibility of classes and members](#item-15-minimize-the-accessibility-of-classes-and-members)  
     * [Item 16: In public classes, use accessor methods, not public fields](#item-16-in-public-classes-use-accessor-methods-not-public-fields)
@@ -197,7 +198,7 @@ public boolean equals(Object o) {
 // you don't ever wanna see this:
 // Assertion failure: expected {abc, 123}, but was {abc, 123}.
 ```
-#### think whether to specify the format of the return value in the documentation
+#### think about whether to specify the format of the return value in the documentation
 * if you do, it can serves as a standard format to use in parsing the object into some CSV for example
 * also provide corresponding matching factory or from string constructor for user to easily translate between the object and its string representation
 * disadvantage is once you specified a format, it is hard to make change in future if many client code depend on it
@@ -207,6 +208,55 @@ public boolean equals(Object o) {
 * it makes no sense to write toString method in a static utility class, for enum types the default one is perfectly good
 * you should write a toString method in any abstract class whose subclasses share a common string representation (most collection classes work like this)
 
+### Item 13 Override clone judiciously
+* `java.lang.Object`'s `clone()` method is awful, a better approach to object copying is to provide a copy constructor or copy factory
+
+#### How Object.clone() work
+* `Object.clone()` will return you a **shallow copy** of the object, the cloning logic is implemented in native code
+* it throws checked exception `CloneNotSupportedException` if an object does not implements `Cloneable`
+* it is implement as a protected method, meaning if you have a `Dog` class and if it doesn't override `clone`, you cannot call `clone` on it
+* to get the `Object.clone()` to clone your `Dog` class, `Dog` class and all its parents all the way up to `Object` needs to call `super.clone()`
+#### Problem with Object.clone()
+* `Cloneable` is a marker interface (bad design), it contains no method
+* this means a class implementing `Cloneable` is not forced to override `Object.clone()` or override it but do not call `super.clone()` and break the chain
+* rely on constructor chaining, except that it isn't enforced; compiler won't complain if a class doesn't call `super.clone()`
+* the call to `super.clone()` must be contained in a try-catch block because `CloneNotSupportedException`
+* we must cast the result of `super.clone()` back to the class's type, but this cast is guarantee to succeed
+* it clones shallow copy so if modifying the field in the cloned object modify the original
+* we can call `clone` on arrays to ensure each element is clone recursively (a good use case for clone is array)
+```java
+// Clone method for class with references to mutable state
+@Override
+public Stack clone() {
+    try {
+        Stack result = (Stack) super.clone();
+        result.elements = elements.clone(); // element is an array
+        return result;
+    } catch (CloneNotSupportedException e) {
+        throw new AssertionError();
+    }
+}
+```
+* notice if a mutable object field is final, then we cannot use the clone recursively strategy and re-assign value
+* for more complexe object, like an array of linked item (HashTable), need to do more complicated deepCopy logic (see p63 example)
+
+#### Watch out
+* immutable classes should never provide a clone method because you could just reuse that single instance everywhere
+* if a final class has a clone method that does not invoke super.clone, there is no reason for the class to implement `Cloneable`, as it doesn't rely on the behavior of Object's clone implementation
+* like a constructor, a clone method must never invoke an overridable method (Item 19 bullet point 4)
+* public clone methods should omit the throws clause (sallow the `CloneNotSupportedException` so caller is easier to use)
+* to design a class for inheritance, there are 2 choices but both **should not** implement `Cloneable`
+    * a properly functioning protected clone method that is declared to throw CloneNotSupportedException. This gives subclasses the freedom to implement Cloneable or not, just as if they extended Object directly
+    * not to implement a working clone method, and to prevent subclasses from implementing one
+    ```java
+    // clone method for extendable class not supporting Cloneable
+    @Override
+    protected final Object clone() throws CloneNotSupportedException {
+        throw new CloneNotSupportedException();
+    }
+    ```
+* again, object copying is to provide a copy constructor or copy factory are better because they can take interface type instead
+    * like transform a `HashSet` into a `TreeSet` with `new TreeSet<>(s)` where s is `HashSet`
 
 ## 4 Classes and Interfaces
 
