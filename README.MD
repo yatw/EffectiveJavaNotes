@@ -7,6 +7,7 @@
     * [Item 11: Always override hashCode when you override equals](#item-11-always-override-hashcode-when-you-override-equals)  
     * [Item 12: Always override toString](#item-12-always-override-tostring)  
     * [Item 13: Override clone judiciously](#item-13-override-clone-judiciously)
+    * [Item 14: Consider implementing Comparable](#item-14-consider-implementing-comparable)    
 * [4 Classes and Interfaces](#4-classes-and-interfaces)   
     * [Item 15: Minimize the accessibility of classes and members](#item-15-minimize-the-accessibility-of-classes-and-members)  
     * [Item 16: In public classes, use accessor methods, not public fields](#item-16-in-public-classes-use-accessor-methods-not-public-fields)
@@ -257,6 +258,39 @@ public Stack clone() {
     ```
 * again, object copying is to provide a copy constructor or copy factory are better because they can take interface type instead
     * like transform a `HashSet` into a `TreeSet` with `new TreeSet<>(s)` where s is `HashSet`
+
+### Item 14 Consider implementing Comparable
+* by implementing `Comparable`, a class indicates that its instances have a natural ordering
+* the `compareTo` method is not declared in Object but rather it is the sole method in `Comparable`
+#### here is the contract
+* compare this object (a) with another argument object (b), return negative if a go before b, 0 if order doesn't mater, postive if a go after b
+* throws `ClassCastException` if the specified object's type prevents it from being compared to this object
+
+* Symmetric: a.compareTo(b) and b.compareTo(a) needs to be reverse of each other
+* Transitive: if a.compareTo(b) > 0 and b.compareTo(c) > 0, then a.compareTo(c) must > 0
+* it is strongly recommended, but not required, that (x.compareTo(y)== 0) == (x.equals(y)) 
+    * Generally speaking, any class that implements the Comparable interface and violates this condition should clearly indicate this fact
+    * The recommended language is “Note: This class has a natural ordering that is inconsistent with equals.”
+    * problem such as two `new BigDecimal("1.0")` and `new BigDecimal("1.00")` put into a HashSet is 2 items, but put into a TreeSet is only 1 element
+
+#### watch out
+* the same caveat from `Object.equals()` applies, there is no way to extend a `Comparable` class and still preseving the compareTo contract
+* since `Comparable` is parameterized, the if the argument to `compareTo` is wrong type, it won't compile
+* use the static compare methods for all Java's boxed primitive classes comparison
+* use of the relational operators < and > in compareTo methods is verbose and error-prone and no longer recommended
+* the `Comparator` interface also as a set of construction methods, they are slower but more concise
+```java
+// Comparable with comparator construction methods
+private static final Comparator<PhoneNumber> COMPARATOR = comparingInt((PhoneNumber pn) -> pn.areaCode)
+    .thenComparingInt(pn -> pn.prefix)
+    .thenComparingInt(pn -> pn.lineNum);
+
+public int compareTo(PhoneNumber pn) {
+    return COMPARATOR.compare(this, pn);
+}
+```
+* there are also comparator construction methods for object reference types named `comparing`, read p71 for its overloads
+* using `a-b` in the compareTo method is subjected to integer overflow, use either a static compare method or comparator construction method
 
 ## 4 Classes and Interfaces
 
