@@ -2,6 +2,8 @@
 
 
 ## Table of Contents
+* [2 Creating and Destroying Objects](#2-creating-and-destroying-objects) 
+    * [Item 1: Consider static factory methods instead of constructor](#item-1-consider-static-factory-methods-instead-of-constructors)  
 * [3 Methods Common to All Objects](#3-methods-common-to-all-objects)   
     * [Item 10: Obey the general contract when overriding equals](#item-10-obey-the-general-contract-when-overriding-equals)  
     * [Item 11: Always override hashCode when you override equals](#item-11-always-override-hashcode-when-you-override-equals)  
@@ -90,6 +92,46 @@
     * [Item 85: Prefer alternatives to Java serialization](#item-85-prefer-alternatives-to-java-serialization)
     * [Item 86: Implement Serializable with great caution](#item-86-implement-serializable-with-great-caution)
     
+## 2 Creating and Destroying Objects
+
+### Item 1 Consider static factory methods instead of constructors
+* the concept of static factory is just having a method to call the constructor internally instead of exposing the constructor publicly     
+#### Advantage
+* they have names and won't run into problems like multiple constructors cannot have the same signature
+* they are not required to create a new object each time they're invoked
+    * this open up great things like caching pre-constructed instances and control what instaces exist at any time
+* they can return an object of any subtype of their return type  
+    * [It means you can hide the implementatation details of choosing what object to create and return](https://stackoverflow.com/a/58719599/5777189) 
+* the returned object can vary from call to call as a function of the input parameters
+    * `EnumSet`'s static factory return a 64 less than items optimized `RegularEnumSet` back by a long, or `JumboEnumSet` backed by long array if > 64 items
+* returned object need not exist when the class containing the method is written
+    * [It means that the API of your static factory method can return an interface type, of which the implementation won't be written or generated until later](https://stackoverflow.com/a/53240824/5777189)    
+* if you are extending a subclass, a normal constructor of the child class will force you to call `super()` as first line in the constructor before you got a chance to do any pre-processing of the data
+    * public static factory allow you to call any other methods you need to manipulate the data before you pass that into the parent constructor
+```java
+public class Parent(){
+    public ProcessedData process(RawData rawData){
+        //... internal logic
+    }       
+}
+public class Child(){
+
+   public Child(RawData rawData){
+      super(?????);  // normal constructor you are forced to pass the ProcessedData in this line
+   }
+    public Child of(RawData rawData){
+        ProcessedData proccessedData = this.process(data); // give you a chance to process
+        return new Child(proccessedData);
+    }
+}
+```    
+#### Disadvantage
+* classes without public or protected constructors cannot be subclassed
+    * could actually be a good thing to encourage other classes to use composition instead of inheritance ([Item 18](#item-18-favor-composition-over-inheritance))
+* a little bit harder to find the public static factory method among the other normal methods
+    * use conventional name like `from`, `of`, `valueOf`, `getInstance`, `list`, etc
+
+
 ## 3 Methods Common to All Objects
 
 ### Item 10 Obey the general contract when overriding equals
