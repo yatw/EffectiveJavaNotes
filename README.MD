@@ -3,7 +3,8 @@
 
 ## Table of Contents
 * [2 Creating and Destroying Objects](#2-creating-and-destroying-objects) 
-    * [Item 1: Consider static factory methods instead of constructor](#item-1-consider-static-factory-methods-instead-of-constructors)  
+    * [Item 1: Consider static factory methods instead of constructor](#item-1-consider-static-factory-methods-instead-of-constructors) 
+    * [Item 2: Consider a builder when faced with many constructor parameters](#item-2-consider-a-builder-when-faced-with-many-constructor-parameters)   
 * [3 Methods Common to All Objects](#3-methods-common-to-all-objects)   
     * [Item 10: Obey the general contract when overriding equals](#item-10-obey-the-general-contract-when-overriding-equals)  
     * [Item 11: Always override hashCode when you override equals](#item-11-always-override-hashcode-when-you-override-equals)  
@@ -110,12 +111,16 @@
     * public static factory allow you to call any other methods you need to manipulate the data before you pass that into the parent constructor
 ```java
 public class Parent(){
+    public Parent(ProccessedData proccessedData){ // parent need ProcessedData
+    }
     public ProcessedData process(RawData rawData){
         //... internal logic
     }       
 }
 public class Child(){
-
+   public Child(ProccessedData proccessedData){
+      super(proccessedData);
+   }
    public Child(RawData rawData){
       super(?????);  // normal constructor you are forced to pass the ProcessedData in this line
    }
@@ -131,7 +136,215 @@ public class Child(){
 * a little bit harder to find the public static factory method among the other normal methods
     * use conventional name like `from`, `of`, `valueOf`, `getInstance`, `list`, etc
 
+### Item 2 Consider a builder when faced with many constructor parameters
+* when you have many parameters going into a constructor, you could easily make a mistake of swaping some of them
+#### Telescoping constructor pattern
+* idea is make one constructor call the next constructor, setting the default value to the next parameter
+```java
+//example
+public class NutritionFacts {
+    private final int servingSize; // (mL) required
+    private final int servings; // (per container) required
+    private final int calories; // (per serving) optional
+    private final int fat; // (g/serving) optional
+    private final int sodium; // (mg/serving) optional
+    private final int carbohydrate; // (g/serving) optional
 
+    public NutritionFacts(int servingSize, int servings) {
+        this(servingSize, servings, 0);
+    }
+
+    public NutritionFacts(int servingSize, int servings, int calories) {
+        this(servingSize, servings, calories, 0);
+    }
+
+    public NutritionFacts(int servingSize, int servings, int calories, int fat) {
+        this(servingSize, servings, calories, fat, 0);
+    }
+
+    public NutritionFacts(int servingSize, int servings, int calories, int fat, int sodium) {
+        this(servingSize, servings, calories, fat, sodium, 0);
+    }
+
+    public NutritionFacts(int servingSize, int servings, int calories, int fat, int sodium, int carbohydrate) {
+        this.servingSize = servingSize;
+        this.servings = servings;
+        this.calories = calories;
+        this.fat = fat;
+        this.sodium = sodium;
+        this.carbohydrate = carbohydrate;
+    }
+}
+```
+* this pattern works, but it is hard to write client code when there are many parameters, and harder still to read it
+* expect huge re-work when you update one of the parameter type, or add new parameters
+* still forcing the client to deal with the problem of long sequences of identically typed parameters
+    * for example client want to specify sodium, but want `calories` and `fat` to be default, client need to write `new NutritionFacts(240, 8, 0, 0, 35);`
+
+#### JavaBeans pattern
+```java
+// JavaBeans Pattern - allows inconsistency, mandates mutability
+public class NutritionFacts {
+    // Parameters initialized to default values (if any)
+    private int servingSize = -1; // Required; no default value
+    private int servings = -1; // Required; no default value
+    private int calories = 0;
+    private int fat = 0;
+    private int sodium = 0;
+    private int carbohydrate = 0;
+    public NutritionFacts() { }
+    // Setters
+    public void setServingSize(int val) { servingSize = val; }
+    public void setServings(int val) { servings = val; }
+    public void setCalories(int val) { calories = val; }
+    public void setFat(int val) { fat = val; }
+    public void setSodium(int val) { sodium = val; }
+    public void setCarbohydrate(int val) { carbohydrate = val; }
+}
+```
+use it as 
+```java
+NutritionFacts cocaCola = new NutritionFacts();
+cocaCola.setServingSize(240);
+cocaCola.setServings(8);
+cocaCola.setCalories(100);
+cocaCola.setSodium(35);
+cocaCola.setCarbohydrate(27);
+```
+* this pattern has serious disadvantage
+* because construction is split across multiple calls, a JavaBean may be in an inconsistent state partway through its construction
+* the class cannot prevent an incompleted object from being used further
+* automatically make a class mutable ([Item 17]((#item-17-minimize-mutability)))
+
+#### Builder pattern
+```java
+// Builder Pattern
+public class NutritionFacts {
+    private final int servingSize;
+    private final int servings;
+    private final int calories;
+    private final int fat;
+    private final int sodium;
+    private final int carbohydrate;
+
+    public static class Builder {
+        // Required parameters
+        private final int servingSize;
+        private final int servings;
+        // Optional parameters - initialized to default values
+        private int calories = 0;
+        private int fat = 0;
+        private int sodium = 0;
+        private int carbohydrate = 0;
+
+        public Builder(int servingSize, int servings) {
+            this.servingSize = servingSize;
+            this.servings = servings;
+        }
+
+        public Builder calories(int val) {
+            calories = val;
+            return this;
+        }
+
+        public Builder fat(int val) {
+            fat = val;
+            return this;
+        }
+
+        public Builder sodium(int val) {
+            sodium = val;
+            return this;
+        }
+
+        public Builder carbohydrate(int val) {
+            carbohydrate = val;
+            return this;
+        }
+
+        public NutritionFacts build() {
+            return new NutritionFacts(this);
+        }
+    }
+
+    private NutritionFacts(Builder builder) {
+        servingSize = builder.servingSize;
+        servings = builder.servings;
+        calories = builder.calories;
+        fat = builder.fat;
+        sodium = builder.sodium;
+        carbohydrate = builder.carbohydrate;
+    }
+}
+```
+* since the builder's setter methods return the builder itself so client can chain them like
+```java
+NutritionFacts cocaCola = new NutritionFacts.Builder(240, 8)
+.calories(100).sodium(35).carbohydrate(27).build();
+```
+* client code with long sequences of identically typed parameters are not readable 
+* the `NutritionFacts` class is immutable
+* put all the parameter validity check in the builder's constructor and methods
+* this pattern works well for class hierarchies (you can extend the parent's abstract builder)
+* the same builder can be tweaked between invocations of the build method to create multiple objects
+```java
+// Builder pattern for class hierarchies
+public abstract class Pizza {
+    public enum Topping {HAM, MUSHROOM, ONION, PEPPER, SAUSAGE}
+
+    final Set<Topping> toppings;
+
+    abstract static class Builder<T extends Builder<T>> {
+        EnumSet<Topping> toppings = EnumSet.noneOf(Topping.class);
+
+        public T addTopping(Topping topping) {
+            toppings.add(Objects.requireNonNull(topping));
+            return self();
+        }
+
+        abstract Pizza build();
+
+        // Subclasses must override this method to return "this"
+        protected abstract T self();
+    }
+
+    Pizza(Builder<?> builder) {
+        toppings = builder.toppings.clone(); // See Item 50
+    }
+}
+```
+
+```java
+public class NyPizza extends Pizza {
+    public enum Size {SMALL, MEDIUM, LARGE}
+
+    private final Size size;
+
+    public static class Builder extends Pizza.Builder<Builder> {
+        private final Size size;
+
+        public Builder(Size size) {
+            this.size = Objects.requireNonNull(size);
+        }
+
+        @Override
+        public NyPizza build() {
+            return new NyPizza(this);
+        }
+
+        @Override
+        protected Builder self() {
+            return this;
+        }
+    }
+
+    private NyPizza(Builder builder) {
+        super(builder);
+        size = builder.size;
+    }
+}
+```
+* the disadvantage of builder pattern is it requires client to create the builder object, could be a problem in performance-critical situations
 ## 3 Methods Common to All Objects
 
 ### Item 10 Obey the general contract when overriding equals
