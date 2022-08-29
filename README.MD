@@ -4,7 +4,10 @@
 ## Table of Contents
 * [2 Creating and Destroying Objects](#2-creating-and-destroying-objects) 
     * [Item 1: Consider static factory methods instead of constructor](#item-1-consider-static-factory-methods-instead-of-constructors) 
-    * [Item 2: Consider a builder when faced with many constructor parameters](#item-2-consider-a-builder-when-faced-with-many-constructor-parameters)   
+    * [Item 2: Consider a builder when faced with many constructor parameters](#item-2-consider-a-builder-when-faced-with-many-constructor-parameters)  
+    * [Item 3: Enforce the singleton property with a private constructor or an enum type](#item-3-enforce-the-singleton-property-with-a-private-constructor-or-an-enum-type)
+    * [Item 4: Enforce noninstantiability with a private constructor](#item-4-enforce-noninstantiability-with-a-private-constructor) 
+    * [Item 5: Prefer dependency injection to hardwiring resources](#item-5-prefer-dependency-injection-to-hardwiring-resources) 
 * [3 Methods Common to All Objects](#3-methods-common-to-all-objects)   
     * [Item 10: Obey the general contract when overriding equals](#item-10-obey-the-general-contract-when-overriding-equals)  
     * [Item 11: Always override hashCode when you override equals](#item-11-always-override-hashcode-when-you-override-equals)  
@@ -345,6 +348,94 @@ public class NyPizza extends Pizza {
 }
 ```
 * the disadvantage of builder pattern is it requires client to create the builder object, could be a problem in performance-critical situations
+
+### Item 3 Enforce the singleton property with a private constructor or an enum type
+* singleton is simply a class that is instantiated exactly once
+* making a class singleton can make it difficult to test its clients because you can't create mocks
+
+#### 1 final field member
+```java
+// Singleton with public final field
+public class Elvis {
+    public static final Elvis INSTANCE = new Elvis();
+    private Elvis() { ... }
+}
+```
+* nothing the client does can change the fact that one instance will exist once the Elvis class is initialized (unless reflection)
+* defend against reflection attack by modifying the constructor to throw an exception when asked to create a second instance
+#### 2 public static factory method
+```java
+// Singleton with static factory
+public class Elvis {
+    private static final Elvis INSTANCE = new Elvis();
+    private Elvis() { ... }
+    public static Elvis getInstance() { return INSTANCE; }
+}
+```
+* the advantage is you are flexibility to change what to return (you could make it not singleton later)
+* works with generic method if you need it
+* method reference can be used as a supplier, for example `Elvis::instance` is a `Supplier<Elvis>`
+* Unless one of these advantages is relevant, the public field approach is preferable
+
+#### watch out
+* to make a singleton class that uses either of these approaches serializable, it is not sufficient merely to add implements Serializable to its declaration
+* to maintain the singleton guarantee, declare all instance fields transient and provide a readResolve method (Item 89)
+* Otherwise, each time a serialized instance is deserialized, a new instance will be created (see page 18 example)
+
+#### 3 single-element enum
+```java
+// Enum singleton - the preferred approach
+public enum Elvis {
+    INSTANCE;
+    public void leaveTheBuilding() { ... }
+}
+```
+* provides the serialization machinery for free
+* provides an ironclad guarantee against multiple instantiation even in the face of sophisticated serialization or reflection attacks
+* can’t use this approach if your singleton must extend a superclass other than Enum(though you can declare an enum to implement interfaces)
+
+### Item 4 Enforce noninstantiability with a private constructor
+* occassionally we have helper classes that is just a grouping of static methods and static fields
+* for example `java.lang.Math`, `java.util.Arrays`, and `java.util.Collections`
+* attempting to enforce noninstantiability by making a class abstract does not work (because it can be subclassed)
+* a default constructor is generated only if a class contains no explicit constructors, so a class can be made noninstantiable by including a private constructor
+```java
+// Noninstantiable utility class
+public class UtilityClass {
+    // Suppress default constructor for noninstantiability
+    private UtilityClass() {
+        throw new AssertionError();
+    } ... // Remainder omitted
+}
+```
+### Item 5 Prefer dependency injection to hardwiring resources
+* if you have a class that depends on some resource to function, pass the resouce into the constructor when creating a new instance
+* it preserves immutability so multiple clients can share dependent objects
+* applicable to constructors, static factories, and builders
+* simliarly, you can also pass in a resource factory instead
+---
+* static utility classes and singletons are inappropriate for classes whose behavior is parameterized by an underlying resource
+* the example given this chapter is `SpellChecker` requires `Dictionary` to function
+```java
+// Inappropriate use of static utility - inflexible & untestable!
+public class SpellChecker {
+    private static final Lexicon dictionary = ...;
+    private SpellChecker() {} // Noninstantiable
+}
+```
+```java
+// Inappropriate use of singleton - inflexible & untestable!
+public class SpellChecker {
+    private final Lexicon dictionary = ...;
+    private SpellChecker(...) {}
+    public static INSTANCE = new SpellChecker(...);
+}
+```
+* the problem with these is it cannot support changing the dictionary object easily
+* there are many genuine need to swap different dictionary (resources), including testing
+* attempt to support multiple dictionaries by making the dictionary field nonfinal and adding a method to change the dictionary in an existing spell checker is awkward, error-prone,and unworkable in a concurrent setting
+
+
 ## 3 Methods Common to All Objects
 
 ### Item 10 Obey the general contract when overriding equals
