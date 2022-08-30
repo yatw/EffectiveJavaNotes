@@ -8,6 +8,7 @@
     * [Item 3: Enforce the singleton property with a private constructor or an enum type](#item-3-enforce-the-singleton-property-with-a-private-constructor-or-an-enum-type)
     * [Item 4: Enforce noninstantiability with a private constructor](#item-4-enforce-noninstantiability-with-a-private-constructor) 
     * [Item 5: Prefer dependency injection to hardwiring resources](#item-5-prefer-dependency-injection-to-hardwiring-resources) 
+    * [Item 6: Avoid creating unnecessary objects](#item-6-avoid-creating-unnecessary-objects)     
 * [3 Methods Common to All Objects](#3-methods-common-to-all-objects)   
     * [Item 10: Obey the general contract when overriding equals](#item-10-obey-the-general-contract-when-overriding-equals)  
     * [Item 11: Always override hashCode when you override equals](#item-11-always-override-hashcode-when-you-override-equals)  
@@ -431,11 +432,61 @@ public class SpellChecker {
     public static INSTANCE = new SpellChecker(...);
 }
 ```
-* the problem with these is it cannot support changing the dictionary object easily
+* the problem with these is it cannot support changing the dictionary object
 * there are many genuine need to swap different dictionary (resources), including testing
 * attempt to support multiple dictionaries by making the dictionary field nonfinal and adding a method to change the dictionary in an existing spell checker is awkward, error-prone,and unworkable in a concurrent setting
 
-
+### Item 6 Avoid creating unnecessary objects
+* an object can always be reused if it is immutable
+* never create a string from constructor with `new String("something"")` as "something" is already a string itself
+* since string is immutable, java internally manage a [string pool](https://www.baeldung.com/java-string-pool) to reuse string
+* if you call the constructor with `new` then a new object is always created, but if you call a static factory methods you might reusing the same immutable object
+    * for example `Boolean.valueOf(String)` instead of `new Boolean(String)` which is deprecated
+    
+#### not obvious unnecessary objects creation
+* regular expression String.matches internally creates a Pattern instance for the regular expression and uses it only once, after which it is eligible for garbage collection
+* creating a Pattern instance is expensive because it requires compiling the regular expression into a finite state machine
+* it is not suitable for repeated use in performance-ciritcal situations
+```java
+// Performance can be greatly improved!
+static boolean isRomanNumeral(String s) {
+    return s.matches("^(?=.)M*(C[MD]|D?C{0,3})" + "(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})$");
+}
+```
+* fix: explicitly compile the regular expression into a `Pattern` and cache it
+```java
+// Reusing expensive object for improved performance
+public class RomanNumerals {
+    private static final Pattern ROMAN = Pattern.compile("^(?=.)M*(C[MD]|D?C{0,3})" + "(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})$");
+    static boolean isRomanNumeral(String s) {
+        return ROMAN.matcher(s).matches();
+    }
+}
+```
+* note, lazy initializing the field the first time the method is invoked is not recommended
+    * it would complicate the implementation with no measurable performance improvement
+---
+* an adapter is an object that delegates to a backing object, providing an alternative interface
+* because an adapter has no state beyond that of its backing object, there’s no need to create more than one instance of a given adapter to a given object
+* For example, the keySet method of the Map interface returns a Set view of the Map object, consisting of all the keys in the map
+* every call to keySet on a given Map object may return the same Set instance because they are all refering to the same collection of items
+---
+* autoboxing allows programmers to mix primitive and boxed primitive types, boxing and unboxing automatically as needed
+```java
+// Hideously slow! Can you spot the object creation?
+private static long sum() {
+    Long sum = 0L;
+    for (long i = 0; i <= Integer.MAX_VALUE; i++)
+        sum += i;
+    return sum;
+}
+```
+* declaring the `sum` `Long` instead of `long` means every i is autoboxed into a `Long` object before adding to sum, creating extra object on every loop
+#### watch out
+* the creation and reclamation of small objects whose constructors do little explicit work is cheap, especially on modern JVM implementations    
+* avoiding object creation by maintaining your own object pool on lightweight objects only clutters your code, increases memory footprint, and harms performance
+    * ok for expensive object like database connection
+    
 ## 3 Methods Common to All Objects
 
 ### Item 10 Obey the general contract when overriding equals
