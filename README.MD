@@ -9,6 +9,7 @@
     * [Item 4: Enforce noninstantiability with a private constructor](#item-4-enforce-noninstantiability-with-a-private-constructor) 
     * [Item 5: Prefer dependency injection to hardwiring resources](#item-5-prefer-dependency-injection-to-hardwiring-resources) 
     * [Item 6: Avoid creating unnecessary objects](#item-6-avoid-creating-unnecessary-objects)     
+    * [Item 7: Eliminate obsolete object references](#item-7-eliminate-obsolete-object-references)
 * [3 Methods Common to All Objects](#3-methods-common-to-all-objects)   
     * [Item 10: Obey the general contract when overriding equals](#item-10-obey-the-general-contract-when-overriding-equals)  
     * [Item 11: Always override hashCode when you override equals](#item-11-always-override-hashcode-when-you-override-equals)  
@@ -487,6 +488,65 @@ private static long sum() {
 * avoiding object creation by maintaining your own object pool on lightweight objects only clutters your code, increases memory footprint, and harms performance
     * ok for expensive object like database connection
     
+    
+### Item 7 Eliminate obsolete object references
+```java
+// Can you spot the "memory leak"?
+public class Stack {
+    private Object[] elements;
+    private int size = 0;
+    private static final int DEFAULT_INITIAL_CAPACITY = 16;
+
+    public Stack() {
+        elements = new Object[DEFAULT_INITIAL_CAPACITY];
+    }
+
+    public void push(Object e) {
+        ensureCapacity();
+        elements[size++] = e;
+    }
+
+    public Object pop() {
+        if (size == 0)
+            throw new EmptyStackException();
+        return elements[--size];
+    }
+
+    /**
+     * Ensure space for at least one more element, roughly
+     * doubling the capacity each time the array needs to grow.
+     */
+    private void ensureCapacity() {
+        if (elements.length == size)
+            elements = Arrays.copyOf(elements, 2 * size + 1);
+    }
+}
+```
+* when this stack pop something, the object is still referenced by the `elements` array
+* if an object reference is unintentionally retained, not only is that object excluded from garbage collection, but so too are any objects referenced by that object, and so on
+* fix the above memory leak by null out the unused reference
+```java
+public Object pop() {
+    if (size == 0)
+        throw new EmptyStackException();
+    Object result = elements[--size];
+    elements[size] = null; // Eliminate obsolete reference
+    return result;
+}
+```
+* nulling out object references should be the exception rather than the norm
+* the best way to eliminate an obsolete reference is to let the variable that contained the reference fall out of scope which occurs naturally if you define each variable in the narrowest possible scope
+* if a class manages its own memory than you should null out a reference
+---
+* another common source of memory leaks is caches if you forget and leave it in the cache long after it becomes irrelevant
+* you may try a `WeakHashMap` that its entries will be removed automatically after the key outside of the cache become obsolete
+* the cache should occasionally be cleansed of entries that have fallen into disuse
+---
+* a third common source of memory leaks is listeners and other callbacks
+* if you implement an API where clients register callbacks but don’t deregister them explicitly, they will accumulate unless you take some action
+---
+* memory leaks are typically discovered only as a result of careful code inspection or with the aid of a debugging tool known as a heap profiler
+
 ## 3 Methods Common to All Objects
 
 ### Item 10 Obey the general contract when overriding equals
