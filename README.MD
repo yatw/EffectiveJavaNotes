@@ -10,6 +10,7 @@
     * [Item 5: Prefer dependency injection to hardwiring resources](#item-5-prefer-dependency-injection-to-hardwiring-resources) 
     * [Item 6: Avoid creating unnecessary objects](#item-6-avoid-creating-unnecessary-objects)     
     * [Item 7: Eliminate obsolete object references](#item-7-eliminate-obsolete-object-references)
+    * [Item 8: Avoid finalizers and cleaners](#item-8-avoid-finalizers-and-cleaners)
 * [3 Methods Common to All Objects](#3-methods-common-to-all-objects)   
     * [Item 10: Obey the general contract when overriding equals](#item-10-obey-the-general-contract-when-overriding-equals)  
     * [Item 11: Always override hashCode when you override equals](#item-11-always-override-hashcode-when-you-override-equals)  
@@ -547,6 +548,26 @@ public Object pop() {
 ---
 * memory leaks are typically discovered only as a result of careful code inspection or with the aid of a debugging tool known as a heap profiler
 
+### Item 8 Avoid finalizers and cleaners
+* the `finalizer()` method is a method provided by the root Object class, it is called before the garbage collection for a particular object
+
+#### Problems with finalizer and cleaners
+* there is no guarantee they’ll be executed promptly
+    * you should never do anything time-critical in a finalizer or cleaner like close files because open file descriptors are a limited resource
+* the promptness with which finalizers and cleaners are executed is varies widely across implementation
+* there is no guarantee that they’ll run at all
+    * you should never depend on a finalizer or cleaner to update persistent state, such as releasing a persistent lock
+* uncaught exception thrown during finalization is ignored, and finalization of that object terminates
+     * normally, an uncaught exception will terminate the thread and print a stack trace, but not if it occurs in a finalizer
+* there is a severe performance penalty for using finalizers and cleaners     
+* they also open your class up to finalizer attacks
+    *  if an exception is thrown from a constructor or its serialization equivalents, the finalizer of a malicious subclass can run on the partially constructed object that should not have existed
+---
+* instead, have your class implement AutoCloseable, and require its clients to invoke the close method on each instance when it is no longer needed
+*  the instance must keep track of whether it has been closed: the close method must record in a field that the object is no longer valid
+#### valid use case of finalizer and cleaners
+* act as a safety net in case the owner of a resource neglects to call its close method. While there’s no guarantee that the cleaner or finalizer will run promptly (or at all), it is better to free the resource late than never if the client fails to do so
+* native peer is not a normal object, the garbage collector doesn’t know about it and can’t reclaim it when its Java peer is reclaimed. A cleaner or finalizer may be an appropriate vehicle for this task
 ## 3 Methods Common to All Objects
 
 ### Item 10 Obey the general contract when overriding equals
