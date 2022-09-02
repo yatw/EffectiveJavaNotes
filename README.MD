@@ -11,6 +11,7 @@
     * [Item 6: Avoid creating unnecessary objects](#item-6-avoid-creating-unnecessary-objects)     
     * [Item 7: Eliminate obsolete object references](#item-7-eliminate-obsolete-object-references)
     * [Item 8: Avoid finalizers and cleaners](#item-8-avoid-finalizers-and-cleaners)
+    * [Item 9: Prefer try-with-resources to try-finally](#item-9-prefer-try-with-resources-to-try-finally)
 * [3 Methods Common to All Objects](#3-methods-common-to-all-objects)   
     * [Item 10: Obey the general contract when overriding equals](#item-10-obey-the-general-contract-when-overriding-equals)  
     * [Item 11: Always override hashCode when you override equals](#item-11-always-override-hashcode-when-you-override-equals)  
@@ -568,6 +569,71 @@ public Object pop() {
 #### valid use case of finalizer and cleaners
 * act as a safety net in case the owner of a resource neglects to call its close method. While there’s no guarantee that the cleaner or finalizer will run promptly (or at all), it is better to free the resource late than never if the client fails to do so
 * native peer is not a normal object, the garbage collector doesn’t know about it and can’t reclaim it when its Java peer is reclaimed. A cleaner or finalizer may be an appropriate vehicle for this task
+
+### Item 9 Prefer try-with-resources to try-finally
+```java
+* some java libraries require you to manually close the resource, like InputStream,OutputStream, and java.sql.Connection
+// try-finally - No longer the best way to close resources!
+static String firstLineOfFile(String path) throws IOException {
+    BufferedReader br = new BufferedReader(new FileReader(path));
+    try {
+        return br.readLine();
+    } finally {
+        br.close();
+    }
+}
+```
+* it get worse when you have multiple resource
+```java
+// try-finally is ugly when used with more than one resource!
+static void copy(String src, String dst) throws IOException {
+    InputStream in = new FileInputStream(src);
+    try {
+        OutputStream out = new FileOutputStream(dst);
+    try {
+        byte[] buf = new byte[BUFFER_SIZE];
+        int n;
+        while ((n = in.read(buf)) >= 0)
+            out.write(buf, 0, n);
+    } finally {
+        out.close();
+        }
+    }
+    finally {
+        in.close();
+    }
+}
+```
+* another problem is `close()` in the finally block could still fail for the same reason try fail, for example a failure in the underlying physical device
+* there is no record of the first exception in the exception stack trace, which can greatly complicate debugging- usually it’s the first exception that you want to see
+#### Solution
+* try-with-resources statement will automatically handle closing the resouce in case of exception
+* a resource must implement the `AutoCloseable` interface, which consists of a single void-returning close method
+```java
+// try-with-resources - the the best way to close resources!
+static String firstLineOfFile(String path) throws IOException {
+    try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+        return br.readLine();
+    }
+}
+```
+```java
+// try-with-resources on multiple resources - short and sweet
+static void copy(String src, String dst) throws IOException {
+    try (InputStream in = new FileInputStream(src);OutputStream out = new FileOutputStream(dst)) {
+        byte[] buf = new byte[BUFFER_SIZE];
+        int n;
+        while ((n = in.read(buf)) >= 0)
+            out.write(buf, 0, n);
+    }
+}
+```
+* if exceptions are thrown by both the try and the (invisible) close, the latter exception is suppressed in favor of the former
+* these suppressed exceptions are not merely discarded; they are printed in the stack trace with a notation saying that they were suppressed
+* you can also access them programmatically with the getSuppressed method in `Throwable` 
+* of course you can still have a catch clause like a normal try-catch
+
+
 ## 3 Methods Common to All Objects
 
 ### Item 10 Obey the general contract when overriding equals
@@ -1516,6 +1582,7 @@ which is equivalent to:
 ```java
 map.merge(key, value, (count, incr) -> count + incr);
 ```
+* this only work because map class has a method call merge that accept [parameters key and value, and a BiFunction](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html#merge(K,V,java.util.function.BiFunction))
 * There is nothing lambda can do that method reference cannot do
 * If something is too large to put into a lambda, you can extract that into a method and use a method reference
 * occasionally a lambda is more succinct than method reference when the method is in the same class
